@@ -63,10 +63,19 @@ def del_cart_line(user_id, cart_id):
 
 
 def get_cart(user_id):
-    """используйте для просмотра карзины клиента"""
+    """используйте для просмотра корзины клиента"""
     carts = con.execute(f"""SELECT cart.id, (SELECT name FROM products WHERE id = product_id),  amount, total FROM cart INNER 
     JOIN users ON cart.user_id =users.id WHERE vk_id={user_id} or tg_id={user_id}""").fetchall()
     return carts
+
+
+def get_product(str1):
+    """Вводит основные параметры блюда и объект картинки. Примерно так:
+    (('Борщ', 'Говядина, картофель, лук, марковь, свекла, капуста, чеснок, томатная паста, уксус, лавровый лист ', 12.0, '55:00'), <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=2500x1250 at 0x22613F8DD00>)"""
+    product_desc = con.execute(f'SELECT name, description, price, time_to_cook FROM products WHERE name ="{str1}"').fetchone()
+    pic = convert_to_pic(con.execute(f'SELECT pictures FROM products WHERE name ="{str1}"').fetchone()[0])
+    return product_desc, pic
+
 
 
 # print(get_cart(23131))
@@ -78,6 +87,4 @@ def get_cart(user_id):
 # print(get_category())
 # print(get_products('Супы'))
 
-pic = con.execute(f"""SELECT pictures FROM products """)
-# print(data.fetchall())
-print(convert_to_pic(pic.fetchone()[0]))
+
