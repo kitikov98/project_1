@@ -11,10 +11,12 @@ class Database:
     def create_tables(self):
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, vk_id INTEGER UNIQUE, 
         tg_id INTEGER UNIQUE, name TEXT, category TINYINT DEFAULT 0 CHECK(category >=0 AND category <= 2))''')
+
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY, user_id INTEGER, 
-        user_address TEXT, date_delivery DATETIME, status BOOL, cart_id INTEGER, FOREIGN KEY (user_id) REFERENCES 
-        users(id)ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY (cart_id) REFERENCES 
+        user_address TEXT, date_delivery DATETIME, status BOOL, cart_id INTEGER, payment BOOL, 
+        FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY (cart_id) REFERENCES 
         cart(id)ON DELETE RESTRICT ON UPDATE CASCADE)  ''')
+
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS cart (id INTEGER PRIMARY KEY, user_id INTEGER, 
         total INTEGER DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE RESTRICT ON UPDATE CASCADE)''')
 
@@ -25,12 +27,15 @@ class Database:
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS products (id INTEGER PRIMARY KEY, name TEXT, category_id 
         INTEGER, price FLOAT, description TEXT, time_to_cook TIME, pictures BLOB, status BOOL, FOREIGN KEY(
         category_id) REFERENCES category(id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
+
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS category
                             (id INTEGER PRIMARY KEY, name TEXT, description TEXT)''')
+
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS products_rating (id INTEGER PRIMARY KEY, user_id INTEGER, 
         product_id INTEGER, rating TINYINT DEFAULT 4 CHECK(rating >=0 AND rating <= 5), comment INTEGER, FOREIGN KEY( 
         user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY(product_id) REFERENCES 
         products(id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
+
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS orders_rating (id INTEGER PRIMARY KEY, user_id INTEGER, 
         order_id INTEGER, rating TINYINT DEFAULT 4 CHECK(rating >=0 AND rating <= 5), comment INTEGER, FOREIGN KEY( 
         user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY(order_id) REFERENCES orders(
