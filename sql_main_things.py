@@ -41,6 +41,8 @@ def add_user(vk_id, tg_id, name):
     записывать  Пример add_user(None, 1333, 'Giordani Jovanovic')"""
     con.execute('''INSERT INTO users (vk_id, tg_id, name) VALUES (?, ?,  ?)''', (vk_id, tg_id, name))
     con.commit()
+    user_id = con.execute(f"""SELECT id FROM users WHERE vk_id ={vk_id} or tg_id={tg_id}""").fetchone()[0]
+    # con.execute("""INSERT INTO cart """)
 
 
 def add_products_to_cart(user_id, product, amount):

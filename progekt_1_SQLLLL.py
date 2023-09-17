@@ -15,8 +15,8 @@ class Database:
         user_address TEXT, date_delivery DATETIME, status BOOL, cart_id INTEGER, FOREIGN KEY (user_id) REFERENCES 
         users(id)ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY (cart_id) REFERENCES 
         cart(id)ON DELETE RESTRICT ON UPDATE CASCADE)  ''')
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS cart (id INTEGER PRIMARY KEY, user_id INTEGER, total INTEGER,
-        FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE RESTRICT ON UPDATE CASCADE)''')
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS cart (id INTEGER PRIMARY KEY, user_id INTEGER, 
+        total INTEGER DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE RESTRICT ON UPDATE CASCADE)''')
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS cart_row (id INTEGER PRIMARY KEY, product_id INTEGER,
         amount INTEGER, cart_id INTEGER, FOREIGN KEY (cart_id) REFERENCES cart(id)ON DELETE RESTRICT ON 
