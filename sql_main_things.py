@@ -114,7 +114,9 @@ def get_description_dish(str1):
 def add_to_order(user_id, list1):
     """ для добавления заказа в БД нужно имя пользователя и список [адрес доставки, выбранным типом оплаты
     0-наличность 1-карта] """
-    cart_id = con.execute(f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    cart_id = con.execute(
+        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[
+        0]
     status = 1
     now = datetime.now()
     max_time_to_cook = max(con.execute(
@@ -122,13 +124,16 @@ def add_to_order(user_id, list1):
         0]
     max_time_to_cook = timedelta(minutes=datetime.strptime(max_time_to_cook, "%M:%S").minute)
     time_to_cook = now + max_time_to_cook
-    con.execute(f"""INSERT INTO orders (user_address, date_delivery, status, cart_id, payment) VALUES (?, ?, ?, ?, ?)""", (list1[0], time_to_cook, status, cart_id, list1[1]))
+    con.execute(
+        f"""INSERT INTO orders (user_address, date_delivery, status, cart_id, payment) VALUES (?, ?, ?, ?, ?)""",
+        (list1[0], time_to_cook, status, cart_id, list1[1]))
     con.commit()
 
 
-add_to_order(1122, ['г.Минск, ул. Сурганова 37/3', 0])
+def del_order(user_id):
+    pass
 
-
+# add_to_order(1122, ['г.Минск, ул. Сурганова 37/3', 0])
 # add_user(1122, None, 'John')
 # add_products_to_cart_row(1122, 'Шоколадный фондан', 1)
 # print(get_cart_row(1122))
