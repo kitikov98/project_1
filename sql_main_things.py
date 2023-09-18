@@ -123,7 +123,7 @@ def add_to_order(user_id, list1):
         f"SELECT time_to_cook FROM products INNER JOIN cart_row ON cart_row.product_id = products.id INNER JOIN cart ON cart.id=cart_row.cart_id WHERE cart.id = {cart_id}").fetchall())[
         0]
     max_time_to_cook = timedelta(minutes=datetime.strptime(max_time_to_cook, "%M:%S").minute)
-    time_to_cook = now + max_time_to_cook
+    time_to_cook = now + max_time_to_cook+timedelta(minutes=30)
     con.execute(
         f"""INSERT INTO orders (user_address, date_delivery, status, cart_id, payment) VALUES (?, ?, ?, ?, ?)""",
         (list1[0], time_to_cook, status, cart_id, list1[1]))
