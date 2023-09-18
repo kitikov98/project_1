@@ -34,14 +34,6 @@ for y in lst_start:
 #получаю категории из БД
 categories = get_category()
 lst_dishes = []
-# print(get_category())
-# print(f"get_description_dish(data)[0] {get_description_dish('Борщ')[0]}")
-# desc = get_description_dish('Борщ')[0]
-# desc_str = "Название: " + desc[0] + ', ' + "Описание: " + desc[1] + ', ' + "Стоимость: "+ str(desc[2]) + ', ' + "Время доставки: " + desc[3]
-# print(f"desc_str {desc_str}")
-# print({type(desc_str)})
-
-
 
 #клавиатура категорий по данным из БД
 for x in categories:
@@ -82,8 +74,6 @@ def query_handler(call):
             bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
     elif flag == '2':
         if data in categories:
-            #lst_dishes = dict1[data]
-            #???может поменять название функции на get_description_dish
             lst_dishes = get_products(data)
             for dish_ in lst_dishes:
                 markupI_cat_val.add(InlineKeyboardButton(dish_, callback_data='3' + dish_))
@@ -95,13 +85,14 @@ def query_handler(call):
                              reply_markup=markupI_cat_val)
     if flag == '3':
         if data in lst_dishes:
-            #print(f"get_description_dish(data)[0]{'.'.join(get_description_dish(data)[0])}")
             markupR_desc_dish.keyboard.clear()
             desc = get_description_dish(data)[0]
-            desc_str = desc[0] + ": " + desc[1] + '. ' + "Стоимость: " + str(
-                desc[2]) + '. ' + "Время: " + desc[3]
+            desc_str = desc[0] + ": " + desc[1] + '. ' + "Стоимость: " + str(desc[2]) + '. ' + "Время: " + desc[3]
             markupR_desc_dish.add(KeyboardButton(desc_str))
-            bot.send_message(call.message.chat.id, "Описание блюда: ", reply_markup = markupR_desc_dish)
+            #bot.send_message(call.message.chat.id, "Описание блюда: ", reply_markup = markupR_desc_dish)
+            bot.send_message(call.message.chat.id, desc_str, reply_markup=markupR_desc_dish)
+            bot.send_photo(call.message.chat.id, photo=get_description_dish(data)[1])
+
 
 print("Ready")
 
