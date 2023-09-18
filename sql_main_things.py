@@ -112,6 +112,8 @@ def get_description_dish(str1):
 
 
 def add_to_order(user_id, list1):
+    """ для добавления заказа в БД нужно имя пользователя и список [адрес доставки, выбранным типом оплаты
+    0-наличность 1-карта] """
     cart_id = con.execute(f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
     status = 1
     now = datetime.now()
