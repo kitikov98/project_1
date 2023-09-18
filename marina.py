@@ -8,7 +8,7 @@ from telebot.types import InputMediaPhoto
 from dotenv import load_dotenv
 import os
 from os.path import join, dirname
-from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line, get_cart_row, get_product
+from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line, get_cart_row, get_description_dish
 #import gspread
 #from google_dict_stat import stat_user, stat_cat, stat_shop, dict1, new_dict2, dict2
 
@@ -26,72 +26,45 @@ bot = telebot.TeleBot(token)
 markupI_start = InlineKeyboardMarkup()
 markupI_cat = InlineKeyboardMarkup()
 markupI_cat_val = InlineKeyboardMarkup([])
-#markupR_desc = ReplyKeyboardMarkup(resize_keyboard=True)
+markupR_desc_dish = ReplyKeyboardMarkup(resize_keyboard=True)
 lst_start = ["Меню категорий блюд", "Корзина", "Статистика заказов", "Статистика блюд", "Заказы"]
 for y in lst_start:
     markupI_start.add(InlineKeyboardButton(y, callback_data='1'+y))
 
 #получаю категории из БД
 categories = get_category()
+lst_dishes = []
 # print(get_category())
-# print(get_products('Десерты'))
-#print(get_product("Борщ")) #(('Борщ', 'Говядина, картофель, лук, марковь, свекла, капуста, чеснок, томатная паста, уксус, лавровый лист ', 12.0, '55:00'), <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=2500x1250 at 0x1A69F6D1630>)
-# dict1 = {"Закуски": ["брускетты", "сырные тарелки", "суши и роллы"],
-#          "Супы": ["борщ", "грибной суп", "томатный суп с морепродуктами"],
-# "Блюда из мяса": ["стейки", "жаркое", "котлеты", "пельмени"],
-# "Блюда из рыбы и морепродуктов": ["запеченный лосось", "креветки в сливочном соусе", "кальмары на гриле"],
-# "Паста и пицца": ["спагетти болоньезе", "пенне аррабьята", "маргарита пицца", "пицца с морепродуктами"],
-# "Салаты": ["цезарь", "греческий", "тунец с картофельным пюре"],
-# "Десерты": ["тирамису", "панакотта", "шоколадный фондан"],
-# "Барбекю": ["ассорти гриля", "шашлык из свинины", "куриные крылья с барбекю-глазурью"],
-# "Рис и лапша": ["паэлья", "кунг пао", "лапша с куриной грудкой"],
-# "Вегетарианские блюда": ["овощной гриль", "рататуй", "овощное карри"]
-#          }
-# dict_description = {"брускетты": "Название: брускетты. Состав: тостовый хлеб, помидоры, базилик, оливковое масло, сыр пармезан.Стоимость: 5 BYN",
-#                     "cырные тарелки": "Название: сырные тарелки. Состав: cыр гауда, грецкие орехи, мед, сухофрукты. Стоимость: 12 BYN",
-#                     "суши и роллы": "Название: суши и роллы. Состав: рис, нори, рыба, овощи, соевый соус. Стоимость: 11 BYN",
-# "борщ": "Состав: свекла, картофель, морковь, капуста, мясо, лук. Стоимость: 7 BYN",
-# "грибной суп": "Состав: грибы, картофель, лук, зелень, сливки. Стоимость: 6 BYN",
-#  }
+# print(f"get_description_dish(data)[0] {get_description_dish('Борщ')[0]}")
+# desc = get_description_dish('Борщ')[0]
+# desc_str = "Название: " + desc[0] + ', ' + "Описание: " + desc[1] + ', ' + "Стоимость: "+ str(desc[2]) + ', ' + "Время доставки: " + desc[3]
+# print(f"desc_str {desc_str}")
+# print({type(desc_str)})
+
+
+
 #клавиатура категорий по данным из БД
 for x in categories:
     markupI_cat.add(InlineKeyboardButton(x, callback_data='2'+x))
 markupI_cat.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
-
-# #клавиатура категорий
-# for x in dict1.keys():
-#     markupI_cat.add(InlineKeyboardButton(x, callback_data='2'+x))
-# markupI_cat.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
-
-# #сделаю категории одним списком
-# categories = []
-# for key_ in dict1.keys():
-#     categories.append(key_)
-#print(categories)
-#сделаю блюда одним списком
-# dishes = []
-# for value_ in dict1.values():
-#     dishes += value_
-# #print(dishes)
 
 
 @bot.message_handler(content_types=['text'])
 def start(message):
     if message.text == '/start':
         bot.send_message(message.chat.id, "Выбирайте:", reply_markup=markupI_start)
-    # elif message.text in dishes:
-    #     pass
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
     bot.answer_callback_query(callback_query_id=call.id, )
-    #print(call)
+    # print(call)
     id = call.message.chat.id
     flag = call.data[0]
     data = call.data[1:]
-    #print(flag, data)
-    #print(dict2)
+    # print(flag, data)
+    global lst_dishes
+    print(f"lst_dishes {lst_dishes}" )
     # удаление всех кнопок клавиатуры
     markupI_cat_val.keyboard.clear()
     if flag == "1":
@@ -110,6 +83,7 @@ def query_handler(call):
     elif flag == '2':
         if data in categories:
             #lst_dishes = dict1[data]
+            #???может поменять название функции на get_description_dish
             lst_dishes = get_products(data)
             for dish_ in lst_dishes:
                 markupI_cat_val.add(InlineKeyboardButton(dish_, callback_data='3' + dish_))
@@ -119,6 +93,15 @@ def query_handler(call):
                 InlineKeyboardButton("Назад в главное меню", callback_data='1' + "Назад в главное меню"))
             bot.send_message(call.message.chat.id, "Выберите блюдо!",
                              reply_markup=markupI_cat_val)
+    if flag == '3':
+        if data in lst_dishes:
+            #print(f"get_description_dish(data)[0]{'.'.join(get_description_dish(data)[0])}")
+            markupR_desc_dish.keyboard.clear()
+            desc = get_description_dish(data)[0]
+            desc_str = desc[0] + ": " + desc[1] + '. ' + "Стоимость: " + str(
+                desc[2]) + '. ' + "Время: " + desc[3]
+            markupR_desc_dish.add(KeyboardButton(desc_str))
+            bot.send_message(call.message.chat.id, "Описание блюда: ", reply_markup = markupR_desc_dish)
 
 print("Ready")
 
