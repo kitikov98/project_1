@@ -100,7 +100,7 @@ def get_cart_row(user_id):
     return carts
 
 
-def get_product(str1):
+def get_description_dish(str1):
     """Вводит основные параметры блюда и объект картинки. Примерно так: (('Борщ', 'Говядина, картофель, лук, марковь,
     свекла, капуста, чеснок, томатная паста, уксус, лавровый лист ', 12.0, '55:00'),
     <PIL.JpegImagePlugin.JpegImageFile image mode=RGB size=2500x1250 at 0x22613F8DD00>) """
