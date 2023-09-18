@@ -11,7 +11,7 @@ def convert_to_pic(str1):
     # x = pillow.show()
 
 
-con = sl.connect('db.sqlite')
+con = sl.connect('db.sqlite', check_same_thread=False)
 
 
 def get_category():
@@ -53,7 +53,8 @@ def add_user(vk_id, tg_id, name):
 def add_products_to_cart_row(user_id, product, amount):
     """ для добавления продуктов в корзину вам нужен id пользователя, название продукта и его количество.
     Пример(331, 'Жаркое', 1) """
-    total = con.execute(f"SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[
+    total = con.execute(
+        f"SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[
         0]
     cart_id = con.execute(
         f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[
@@ -62,14 +63,15 @@ def add_products_to_cart_row(user_id, product, amount):
     con.execute('''INSERT INTO cart_row (cart_id, product_id, amount) VALUES (?, ?, ?)''',
                 (cart_id, product_id, amount))
     con.commit()
-    new_total = con.execute(f"""SELECT SUM(amount*price) as total FROM cart_row INNER JOIN products ON cart_row.product_id = products.id WHERE cart_id = {cart_id}""").fetchone()[0]
+    new_total = con.execute(
+        f"""SELECT SUM(amount*price) as total FROM cart_row INNER JOIN products ON cart_row.product_id = products.id WHERE cart_id = {cart_id}""").fetchone()[
+        0]
     con.execute(f"""UPDATE cart SET total = {new_total} WHERE total = {total} and id = {cart_id}""")
     con.commit()
 
 
-
 def del_cart_line(user_id, cart_row_id):
-    """ удаление из записи из корзины вам нужен id записи в корзини, который можно получить из функции get_cart и id
+    """ удаление из записи из корзины вам нужен id записи в корзини, который можно получить из функции get_cart_row и id
     пользователя """
     total = con.execute(
         f"SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[
@@ -78,12 +80,13 @@ def del_cart_line(user_id, cart_row_id):
         f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[
         0]
     amount = con.execute(f'SELECT amount FROM cart_row WHERE id ={cart_row_id}').fetchone()[0]
-    price = con.execute(f"SELECT price FROM products INNER JOIN cart_row ON cart_row.product_id=products.id WHERE cart_row.id = {cart_id}").fetchone()[0]
-    new_total = total-(amount*price)
+    price = con.execute(
+        f"SELECT price FROM products INNER JOIN cart_row ON cart_row.product_id=products.id WHERE cart_row.id = {cart_id}").fetchone()[
+        0]
+    new_total = total - (amount * price)
     con.execute(f"""DELETE FROM cart_row WHERE cart_id={cart_id} and id={cart_row_id}""")
     con.execute(f"""UPDATE cart SET total = {new_total} WHERE total = {total} and id = {cart_id}""")
     con.commit()
-
 
 
 def get_cart_row(user_id):
@@ -105,6 +108,9 @@ def get_product(str1):
         f'SELECT name, description, price, time_to_cook FROM products WHERE name ="{str1}"').fetchone()
     pic = convert_to_pic(con.execute(f'SELECT pictures FROM products WHERE name ="{str1}"').fetchone()[0])
     return product_desc, pic
+
+
+
 
 # add_user(13333, None, 'Kpstya')
 # add_products_to_cart_row(1122, 'Кунг пао', 1)
