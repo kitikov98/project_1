@@ -12,10 +12,9 @@ class Database:
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS users (id INTEGER PRIMARY KEY, vk_id INTEGER UNIQUE, 
         tg_id INTEGER UNIQUE, name TEXT, category TINYINT DEFAULT 0 CHECK(category >=0 AND category <= 2))''')
 
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY, user_id INTEGER, 
-        user_address TEXT, date_delivery DATETIME, status BOOL, cart_id INTEGER, payment BOOL, 
-        FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY (cart_id) REFERENCES 
-        cart(id)ON DELETE RESTRICT ON UPDATE CASCADE)  ''')
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY, 
+        user_address TEXT, date_delivery DATETIME, status BOOL, cart_id INTEGER, payment BOOL,
+        FOREIGN KEY (cart_id) REFERENCES cart(id)ON DELETE RESTRICT ON UPDATE CASCADE)  ''')
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS cart (id INTEGER PRIMARY KEY, user_id INTEGER, 
         total INTEGER DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE RESTRICT ON UPDATE CASCADE)''')
@@ -40,10 +39,6 @@ class Database:
         order_id INTEGER, rating TINYINT DEFAULT 4 CHECK(rating >=0 AND rating <= 5), comment INTEGER, FOREIGN KEY( 
         user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY(order_id) REFERENCES orders(
         id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
-        self.connection.commit()
-
-    def add_user(self, vk_id, tg_id, name):
-        self.cursor.execute('''INSERT INTO users (vk_id, tg_id, name) VALUES (?, ?,  ?)''', (vk_id, tg_id, name))
         self.connection.commit()
 
     def add_category(self, list1):

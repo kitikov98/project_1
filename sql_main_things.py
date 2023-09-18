@@ -2,6 +2,7 @@ import sqlite3 as sl
 from io import BytesIO
 from base64 import b64decode
 from PIL import Image
+from datetime import datetime, timedelta
 
 
 def convert_to_pic(str1):
@@ -110,10 +111,24 @@ def get_description_dish(str1):
     return product_desc, pic
 
 
+def add_to_order(user_id, list1):
+    cart_id = con.execute(f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    status = 1
+    now = datetime.now()
+    max_time_to_cook = max(con.execute(
+        f"SELECT time_to_cook FROM products INNER JOIN cart_row ON cart_row.product_id = products.id INNER JOIN cart ON cart.id=cart_row.cart_id WHERE cart.id = {cart_id}").fetchall())[
+        0]
+    max_time_to_cook = timedelta(minutes=datetime.strptime(max_time_to_cook, "%M:%S").minute)
+    time_to_cook = now + max_time_to_cook
+    con.execute(f"""INSERT INTO orders (user_address, date_delivery, status, cart_id, payment) VALUES (?, ?, ?, ?, ?)""", (list1[0], time_to_cook, status, cart_id, list1[1]))
+    con.commit()
 
 
-# add_user(13333, None, 'Kpstya')
-# add_products_to_cart_row(1122, 'Кунг пао', 1)
+add_to_order(1122, ['г.Минск, ул. Сурганова 37/3', 0])
+
+
+# add_user(1122, None, 'John')
+# add_products_to_cart_row(1122, 'Шоколадный фондан', 1)
 # print(get_cart_row(1122))
 # print(del_cart_line(1122, get_cart_row(1122)[1][0]))
 # print(get_cart_row(1122))
