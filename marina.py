@@ -4,22 +4,26 @@ from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
 from telebot.types import InputMediaPhoto
+import json
 #загрузит наш секретный токен из .env файла
-from dotenv import load_dotenv
-import os
-from os.path import join, dirname
+#from dotenv import load_dotenv
+#import os
+#from os.path import join, dirname
 from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line, get_cart_row, get_description_dish
 #import gspread
 #from google_dict_stat import stat_user, stat_cat, stat_shop, dict1, new_dict2, dict2
 
-def get_from_env(key):
-    dotenv_path = join(dirname(__file__), 'token.env')
-    load_dotenv(dotenv_path)
-    return os.environ.get(key)
+# def get_from_env(key):
+#     dotenv_path = join(dirname(__file__), 'token.env')
+#     load_dotenv(dotenv_path)
+#     return os.environ.get(key)
 
+with open('data.json', 'r', encoding='utf-8') as f: #открыли файл с данными
+    text = json.load(f)
+    #print(text)
 
-
-token = get_from_env('TG_BOT_TOKEN')
+#token = get_from_env('TG_BOT_TOKEN')
+token = text.get('tg_token')
 bot = telebot.TeleBot(token)
 
 
