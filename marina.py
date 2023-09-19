@@ -54,7 +54,7 @@ for y in lst_start:
     markupI_start.add(InlineKeyboardButton(y, callback_data='1'+y))
 
 #клавиатура управление корзиной
-lst_for_cart = ["Управление корзиной", "Адрес доставки", "Способ оплаты", "Итоговая стоимость", "Оформить заказ", "Меню категорий блюд"]
+lst_for_cart = ["Управление корзиной", "Адрес доставки", "Способ оплаты", "Оформить заказ", "Меню категорий блюд"]
 markupI_management_cart = InlineKeyboardMarkup()
 for x in lst_for_cart:
     markupI_management_cart.add(InlineKeyboardButton(x, callback_data='5'+x))
@@ -93,11 +93,13 @@ def query_handler(call):
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         elif data == "Корзина":
             print(get_cart_row(user_id))
-            cart_ = get_cart_row(user_id)#[(1, 'Шоколадный фондан', 1, 1), (2, 'Сырные тарелки', 1, 1)]
+            cart_total = get_cart_row(user_id)
+            cart_ = cart_total[0]
+            total_ = cart_total[1]
             desc_cart = ''
             for item in cart_:
                 desc_cart += '*' + str(item[1]) + ' ' + str(item[2]) + " шт." + '\n'
-            bot.send_message(call.message.chat.id, desc_cart, reply_markup=markupI_management_cart)
+            bot.send_message(call.message.chat.id, desc_cart + "Стоимость: " + str(total_), reply_markup=markupI_management_cart)
         elif data == "Статистика заказов":
             pass
         elif data =="Статистика блюд":
@@ -135,11 +137,19 @@ def query_handler(call):
             #??уточнить еще раз про amount, 2 клавы появляются тектовая с инфо, что в корзине, и с флагом 5 Управление корзиной...
             print(f"блюдо летит в добавить в корзину {temp_dish}")
             add_products_to_cart_row(user_id, temp_dish, 1)
-
-    # #флаг 5-клава управление корзино...
-    # elif flag == "5":
-    #     if data == "Меню категорий блюд":
-    #         bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
+    #флаг 5-клава управление корзиной...
+    elif flag == "5":
+        if data == "Меню категорий блюд":
+            bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
+        elif data == "Управление корзиной":
+            pass
+        elif data == "Адрес доставки":
+            pass
+        elif data == "Способ оплаты":
+            pass
+        elif data == "Оформить заказ":
+            pass
+        #"Адрес доставки", "Способ оплаты", "Оформить заказ", "Меню категорий блюд"
 
 
 
