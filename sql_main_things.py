@@ -151,11 +151,47 @@ def cancel_order(user_id, order_id):
     con.commit()
 
 
+def add_product_rating(user_id, review, product, mark=4):
+    """для выставления рейтинга нужны название продукта, отметка и отзыв, id пользователя """
+    id_user = con.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
+    product_id = con.execute(f"""SELECT id FROM products WHERE name = '{product}' """).fetchone()[0]
+    status = 'на рассмотрении'
+    try:
+        con.execute(
+            f"""INSERT INTO products_rating (user_id, product_id, rating, comment, status) VALUES (?, ?, ?, ?, ?)""",
+            (id_user, product_id, mark, review, status))
+        con.commit()
+        return f'спасибо, ваш отзыв принят'
+    except:
+        return f'неверно выставлено значение отметки рейтинга'
+
+
+def add_order_rating(user_id, review, id_order, mark=4):
+    """для выставления рейтинга нужны id заказ, отметка и отзыв, id пользователя """
+    id_user = con.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
+    status = 'на рассмотрении'
+    try:
+        con.execute(
+            f"""INSERT INTO orders_rating (user_id, order_id, rating, comment, status) VALUES (?, ?, ?, ?, ?)""",
+            (id_user, id_order, mark, review, status))
+        con.commit()
+        return f'спасибо, ваш отзыв принят'
+    except:
+        return f'неверно выставлено значение отметки рейтинга'
+
+
+
+# print(add_order_rating(1122, 'быстро доставили', 1))
+# print(add_product_rating(1122, 'отвратительный салат', 'Цезарь', 1))
 
 # change_order(1122, 2)
 # add_to_order(1122, ['г.Минск, ул. Сурганова 37/3', 0])
 # add_user(1122, None, 'John')
 # add_products_to_cart_row(1122, 'Борщ', 12)
+# add_products_to_cart_row(1122, 'Цезарь', 2)
+# add_products_to_cart_row(1122, 'Греческий', 1)
+# add_products_to_cart_row(1122, 'Шоколадный фондан', 3)
+
 # print(get_cart_row(1122))
 # print(del_cart_line(1122, get_cart_row(1122)[1][0]))
 # print(get_cart_row(1122))
