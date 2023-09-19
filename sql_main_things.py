@@ -151,7 +151,7 @@ def cancel_order(user_id, order_id):
     con.commit()
 
 
-def add_product_rating(user_id, review, product, mark=4):
+def add_product_rating(user_id,  product, review=" ", mark=4):
     """для выставления рейтинга нужны название продукта, отметка и отзыв, id пользователя """
     id_user = con.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
     product_id = con.execute(f"""SELECT id FROM products WHERE name = '{product}' """).fetchone()[0]
@@ -166,7 +166,38 @@ def add_product_rating(user_id, review, product, mark=4):
         return f'неверно выставлено значение отметки рейтинга'
 
 
-def add_order_rating(user_id, review, id_order, mark=4):
+def get_product_rating(product):
+    """ выдача среднего рейтинга на основе как минимум 10 отметок"""
+    product_id = con.execute(f"""SELECT id FROM products WHERE name = '{product}' """).fetchone()[0]
+    product_rating = con.execute(f'SELECT * FROM products_rating WHERE product_id = {product_id} and status = "принят"').fetchall()
+    rating_list = []
+    rating_texts = []
+    if len(product_rating) < 10:
+        return f'В данный момент недостаточно данных, чтоб сформировать рейтинг для просмотра блюда {product}'
+    else:
+        for item in product_rating:
+            rating_list.append(item[3])
+            rating_texts.append(item[4])
+        average_rating = sum(rating_list)/len(rating_list)
+        return average_rating, rating_texts
+
+
+def get_orders_rating():
+    """ выдача среднего рейтинга и отзывов на основе как минимум 10 отметок"""
+    orders_rating = con.execute(f'SELECT * FROM orders_rating WHERE status = "принят"').fetchall()
+    rating_list = []
+    rating_texts = []
+    if len(orders_rating) < 10:
+        return f'В данный момент недостаточно данных, чтоб сформировать рейтинг доставок'
+    else:
+        for item in orders_rating:
+            rating_list.append(item[3])
+            rating_texts.append(item[4])
+        average_rating = sum(rating_list)/len(rating_list)
+        return average_rating, rating_texts
+
+
+def add_order_rating(user_id, id_order, review=" ", mark=4):
     """для выставления рейтинга нужны id заказ, отметка и отзыв, id пользователя """
     id_user = con.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
     status = 'на рассмотрении'
@@ -181,6 +212,16 @@ def add_order_rating(user_id, review, id_order, mark=4):
 
 
 
+
+####################################################
+"admin panel"
+
+def change_user_category(user_id):
+    pass
+
+
+# print(add_product_rating(1122, 'первый', 'Борщ', 4))
+# print(get_product_rating('Борщ'))
 # print(add_order_rating(1122, 'быстро доставили', 1))
 # print(add_product_rating(1122, 'отвратительный салат', 'Цезарь', 1))
 
