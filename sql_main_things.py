@@ -97,7 +97,7 @@ def get_cart_row(user_id):
         f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[
         0]
     carts = con.execute(
-        f"""SELECT id,  (SELECT name FROM products WHERE id = product_id), amount, cart_id FROM cart_row WHERE cart_id={cart_id}""").fetchall()
+        f"""SELECT id,  (SELECT name FROM products WHERE id = product_id), amount, cart_id FROM cart_row WHERE cart_id={cart_id} and status_in_order=1""").fetchall()
     return carts
 
 
@@ -123,19 +123,35 @@ def add_to_order(user_id, list1):
         f"SELECT time_to_cook FROM products INNER JOIN cart_row ON cart_row.product_id = products.id INNER JOIN cart ON cart.id=cart_row.cart_id WHERE cart.id = {cart_id}").fetchall())[
         0]
     max_time_to_cook = timedelta(minutes=datetime.strptime(max_time_to_cook, "%M:%S").minute)
-    time_to_cook = now + max_time_to_cook+timedelta(minutes=30)
+    time_to_cook = now + max_time_to_cook + timedelta(minutes=30)
     con.execute(
         f"""INSERT INTO orders (user_address, date_delivery, status, cart_id, payment) VALUES (?, ?, ?, ?, ?)""",
         (list1[0], time_to_cook, status, cart_id, list1[1]))
+    con.execute(f"""UPDATE cart_row SET status_in_order = 0 WHERE status_in_order = 1 and cart_id = {cart_id}""")
     con.commit()
 
 
-def del_order(user_id):
-    pass
+def get_orders(user_id):
+    cart_id = con.execute(
+        f"""SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[
+        0]
+    orders = con.execute(f"SELECT * FROM orders WHERE cart_id={cart_id} and status = 1").fetchall()
+    return orders
 
+
+def change_order(user_id, order_id):
+    cart_id = con.execute(
+        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[
+        0]
+    con.execute(f"""UPDATE cart_row SET status_in_order = 1 WHERE status_in_order = 0 and cart_id = {cart_id}""")
+    con.execute(f"""DELETE FROM orders WHERE cart_id={cart_id} and id={order_id}""")
+    con.commit()
+
+
+# change_order(1122, 2)
 # add_to_order(1122, ['г.Минск, ул. Сурганова 37/3', 0])
 # add_user(1122, None, 'John')
-# add_products_to_cart_row(1122, 'Шоколадный фондан', 1)
+# add_products_to_cart_row(1122, 'Борщ', 12)
 # print(get_cart_row(1122))
 # print(del_cart_line(1122, get_cart_row(1122)[1][0]))
 # print(get_cart_row(1122))
