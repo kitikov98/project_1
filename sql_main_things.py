@@ -91,7 +91,8 @@ def get_cart_row(user_id):
         f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
     carts = con.execute(
         f"""SELECT id,  (SELECT name FROM products WHERE id = product_id), amount, cart_id FROM cart_row WHERE cart_id={cart_id} and status_in_order=1""").fetchall()
-    return carts
+    total = con.execute(f"SELECT total From cart WHERE id = {cart_id}").fetchone()[0]
+    return carts, total
 
 
 def get_description_dish(str1):
