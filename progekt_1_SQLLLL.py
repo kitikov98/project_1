@@ -32,14 +32,14 @@ class Database:
                             (id INTEGER PRIMARY KEY, name TEXT, description TEXT)''')
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS products_rating (id INTEGER PRIMARY KEY, user_id INTEGER, 
-        product_id INTEGER, rating TINYINT DEFAULT 4 CHECK(rating >=0 AND rating <= 5), comment INTEGER, FOREIGN KEY( 
-        user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY(product_id) REFERENCES 
-        products(id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
+        product_id INTEGER, rating TINYINT DEFAULT 4 CHECK(rating >=0 AND rating <= 5), comment TEXT, status TINYTEXT,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE,
+        FOREIGN KEY(product_id) REFERENCES products(id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS orders_rating (id INTEGER PRIMARY KEY, user_id INTEGER, 
-        order_id INTEGER, rating TINYINT DEFAULT 4 CHECK(rating >=0 AND rating <= 5), comment INTEGER, FOREIGN KEY( 
-        user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE, FOREIGN KEY(order_id) REFERENCES orders(
-        id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
+        order_id INTEGER, rating TINYINT DEFAULT 4 CHECK(rating >=0 AND rating <= 5), comment TEXT, status TINYTEXT,
+        FOREIGN KEY(user_id) REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE, 
+        FOREIGN KEY(order_id) REFERENCES orders(id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
         self.connection.commit()
 
     def add_category(self, list1):
