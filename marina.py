@@ -34,6 +34,14 @@ bot = telebot.TeleBot(token)
 lst_dishes = []
 #блюдо сохраниться для добавления в корзину
 temp_dish = ""
+#список блюд корзины, используется при удалении блюд, но удаляться будет блюдо на которое нажали
+lst_dish_cart = []
+#блюдо для удаления
+dish_for_delete = ""
+#словарь для удаления
+dict_del_dish = {}
+#вынесу в глобальную область, чтобы вызвать корзину с предыдущего сеанса один раз и видимости в 2 декораторах
+user_id = ''
 markupI_start = InlineKeyboardMarkup()
 #получаю категории из БД
 categories = get_category()
@@ -53,22 +61,26 @@ lst_start = ["Меню категорий блюд", "Корзина", "Стат
 for y in lst_start:
     markupI_start.add(InlineKeyboardButton(y, callback_data='1'+y))
 
-#клавиатура управление корзиной
-lst_for_cart = ["Управление корзиной", "Адрес доставки", "Способ оплаты", "Оформить заказ", "Меню категорий блюд"]
+#клавиатура по кнопке корзина для дальнейшего управления
+lst_for_cart = ["Удаление из корзины", "Адрес доставки", "Способ оплаты", "Оформить заказ", "Меню категорий блюд"]
 markupI_management_cart = InlineKeyboardMarkup()
 for x in lst_for_cart:
     markupI_management_cart.add(InlineKeyboardButton(x, callback_data='5'+x))
 
+#клавиатура по кнопке управление корзиной для удаления блюд
+markupI_delete_cart = InlineKeyboardMarkup()
+
 
 @bot.message_handler(content_types=['text'])
 def start(message):
+    global user_id
     if message.text == '/start':
         chat_id = message.chat.id
         print(f"chat_id {chat_id}")
         user_id = message.from_user.id
-        print(f"chat_id {user_id}")
+        print(f"user_id {user_id}")
         try:
-            add_user(None, message.from_user.id, 'Marina_1')
+            add_user(None, message.from_user.id, message.from_user.first_name + ' ' + message.from_user.last_name)
         except:
             pass
         bot.send_message(message.chat.id, "Выбирайте:", reply_markup=markupI_start)
@@ -76,26 +88,28 @@ def start(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
-    user_id = call.from_user.id
-    print(f"user_id {user_id}")
+    global lst_dishes, temp_dish, lst_dish_cart, dish_for_delete, dict_del_dish
+    # user_id = call.from_user.id
+    # print(f"user_id {user_id}")
     bot.answer_callback_query(callback_query_id=call.id, )
     # print(call)
     id = call.message.chat.id
     flag = call.data[0]
     data = call.data[1:]
     # print(flag, data)
-    global lst_dishes, temp_dish
-    print(f"lst_dishes {lst_dishes}" )
+    cart_total = get_cart_row(user_id)
+    print(f"cart_total {cart_total}")
+    cart_ = cart_total[0]
+    total_ = cart_total[1]
+    print(f"cart_ {cart_}")
+    print(f"total_ {total_}")
+
     # удаление всех кнопок клавиатуры
     markupI_cat_val.keyboard.clear()
     if flag == "1":
         if data == "Меню категорий блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         elif data == "Корзина":
-            print(get_cart_row(user_id))
-            cart_total = get_cart_row(user_id)
-            cart_ = cart_total[0]
-            total_ = cart_total[1]
             desc_cart = ''
             for item in cart_:
                 desc_cart += '*' + str(item[1]) + ' ' + str(item[2]) + " шт." + '\n'
@@ -122,34 +136,59 @@ def query_handler(call):
     if flag == '3':
         if data in lst_dishes:
             temp_dish = data
-            markupR_desc_dish.keyboard.clear()
+           #markupR_desc_dish.keyboard.clear()
             desc = get_description_dish(data)[0]
             desc_str = desc[0] + ": " + desc[1] + '. ' + "Стоимость: " + str(desc[2]) + '. ' + "Время: " + desc[3]
             markupR_desc_dish.add(KeyboardButton(desc_str))
+            # можно убрать эту клаву
             #bot.send_message(call.message.chat.id, "Описание блюда: ", reply_markup = markupR_desc_dish)
-            bot.send_message(call.message.chat.id, "Описание", reply_markup=markupR_desc_dish)
+            #bot.send_message(call.message.chat.id, "Описание", reply_markup=markupR_desc_dish)
             bot.send_photo(call.message.chat.id, photo=get_description_dish(data)[1])
             bot.send_message(call.message.chat.id, desc_str, reply_markup=markupI_add_card)
     elif flag == '4':
         if data == "Меню категорий блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         elif data == "Добавить в корзину":
-            #??уточнить еще раз про amount, 2 клавы появляются тектовая с инфо, что в корзине, и с флагом 5 Управление корзиной...
+            # #??уточнить еще раз про amount, 2 клавы появляются тектовая с инфо, что в корзине, и с флагом 5 Управление корзиной...
             print(f"блюдо летит в добавить в корзину {temp_dish}")
             add_products_to_cart_row(user_id, temp_dish, 1)
+
     #флаг 5-клава управление корзиной...
     elif flag == "5":
         if data == "Меню категорий блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
-        elif data == "Управление корзиной":
-            pass
+        elif data == "Удаление из корзины":
+            markupI_delete_cart.keyboard.clear()
+            for x in cart_:
+                print(x[1])
+                markupI_delete_cart.add(InlineKeyboardButton(x[1], callback_data='6' + x[1]))
+            markupI_delete_cart.add(
+                InlineKeyboardButton("Меню категорий блюд", callback_data='6' + "Меню категорий блюд"))
+            bot.send_message(call.message.chat.id, "Выберите блюдо для удаления или вернитесь назад в меню категорий блюд", reply_markup=markupI_delete_cart)
+
         elif data == "Адрес доставки":
             pass
         elif data == "Способ оплаты":
             pass
         elif data == "Оформить заказ":
             pass
-        #"Адрес доставки", "Способ оплаты", "Оформить заказ", "Меню категорий блюд"
+    #если блюдо прилетело из меню по удалению блюд(нажали на блюдо в этом меню)
+    elif flag == "6":
+        #dish_for_delete = data
+        print(f"Блюдо летит для удаления {data}")
+        if data == "Меню категорий блюд":
+            bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
+        #без расширения кнопок, нажали на блюдо значит оно на удаление
+        else:
+            #?надо ли функция по удалению по названию блюда из cart_row или норм со словарем
+            for item in cart_:
+                #lst_dish_cart.append(item[1])
+                dict_del_dish[item[1]] = str(item[0])
+            print(f"dict_del_dish {dict_del_dish}")
+            del_cart_line(user_id, dict_del_dish.get[data])
+
+
+
 
 
 
