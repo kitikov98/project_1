@@ -83,6 +83,23 @@ def del_cart_line(user_id, cart_row_id):
     con.execute(f"""UPDATE cart SET total = {new_total} WHERE total = {total} and id = {cart_id}""")
     con.commit()
 
+def delete_by_dish(user_id, product):
+    """ удаление записи из корзины по id пользователя и нзванию продукта """
+    total = con.execute(
+        f"SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[0]
+    cart_id = con.execute(
+        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    product_id = con.execute(f"""SELECT id FROM products WHERE name = '{product}'""").fetchone()[0]
+    amount = con.execute(f'SELECT amount FROM cart_row WHERE product_id ={product_id}').fetchone()[0]
+    cart_row_id = con.execute(f'SELECT id FROM cart_row WHERE product_id = {product_id} and cart_id={cart_id}').fetchone()[0]
+    price = con.execute(
+        f"SELECT price FROM products WHERE name = '{product}'").fetchone()[0]
+    new_total = total - (amount * price)
+    con.execute(f"""DELETE FROM cart_row WHERE cart_id={cart_id} and id={cart_row_id} """)
+    con.execute(f"""UPDATE cart SET total = {new_total} WHERE total = {total} and id = {cart_id}""")
+    con.commit()
+
+
 
 def get_cart_row(user_id):
     """используйте для просмотра строк корзины клиента (cart_row_id, блюдо, количество, номер корзины привязанный к
@@ -229,7 +246,7 @@ def change_user_category(user_id):
 # change_order(1122, 2)
 # add_to_order(1122, ['г.Минск, ул. Сурганова 37/3', 0])
 # add_user(1122, None, 'John')
-# add_products_to_cart_row(1122, 'Борщ', 12)
+# add_products_to_cart_row(1122, 'Борщ', 1)
 # add_products_to_cart_row(1122, 'Цезарь', 2)
 # add_products_to_cart_row(1122, 'Греческий', 1)
 # add_products_to_cart_row(1122, 'Шоколадный фондан', 3)
