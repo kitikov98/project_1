@@ -148,8 +148,11 @@ def add_to_order(user_id, list1):
 
 def get_orders(user_id):
     """ получение данных заказа"""
-    cart_id = get_cart_id(user_id)
-    orders = con.execute(f"SELECT * FROM orders WHERE cart_id={cart_id} and status = 1").fetchall()
+    orders = []
+    cart_id_list = con.execute(f"""SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id 
+    WHERE cart_status = 0 and (vk_id={user_id} or tg_id={user_id})""").fetchall()
+    for x in cart_id_list:
+        orders.append(con.execute(f"SELECT * FROM orders WHERE cart_id={x[0]} and status = 1").fetchone())
     return orders
 
 
@@ -163,7 +166,6 @@ def change_order(user_id, order_id):
     con.execute(f"""DELETE FROM orders WHERE cart_id={cart_id} and id={order_id}""")
     con.commit()
 
-# change_order(1122, 2)
 
 def cancel_order(order_id):
     """ для отмены заказ нужен id заказа из таблицы заказов"""
