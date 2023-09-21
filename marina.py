@@ -9,7 +9,7 @@ import json
 from dotenv import load_dotenv
 import os
 from os.path import join, dirname
-from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line, get_cart_row, get_description_dish, add_to_order
+from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line, get_cart_row, get_description_dish, add_to_order, delete_by_dish
 #import gspread
 #from google_dict_stat import stat_user, stat_cat, stat_shop, dict1, new_dict2, dict2
 
@@ -38,9 +38,7 @@ temp_dish = ""
 # lst_dish_cart = []
 #блюдо для удаления
 dish_for_delete = ""
-#словарь для удаления
-dict_del_dish = {}
-#вынесу в глобальную область, чтобы вызвать корзину с предыдущего сеанса один раз и видимости в 2 декораторах
+#вынесу для видимости в 2 декораторах
 user_id = ''
 markupI_start = InlineKeyboardMarkup()
 #получаю категории из БД
@@ -186,13 +184,10 @@ def query_handler(call):
         print(f"Блюдо летит для удаления {data}")
         if data == "Меню категорий блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
-        #без расширения кнопок, нажали на блюдо - сработала функция удаления записи в cart_row
+        #нажали на блюдо - сработала функция удаления записи в cart_row
         else:
-            #?надо ли функция по удалению по названию блюда из cart_row или норм со словарем
-            for item in cart_:
-                dict_del_dish[item[1]] = str(item[0])
-            print(f"dict_del_dish {dict_del_dish}")
-            del_cart_line(user_id, dict_del_dish.get[data])
+            delete_by_dish(user_id, data)
+            bot.send_message(call.message.chat.id, f"Блюдо {data} удалено из корзины!")
     elif flag == "7":
         if data == "Меню категорий блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
