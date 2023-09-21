@@ -2,7 +2,8 @@ import vk_api
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.utils import get_random_id
-
+from sql_main_things import get_category, get_products, get_cart_row, get_cart_id, add_user, add_products_to_cart_row, add_to_order, get_orders, get_description_dish, get_orders_rating, get_product_rating, change_order,cancel_order, add_order_rating, add_product_rating
+# импортировал все функции для работы с БД
 
 token = ''
 group_id = ''
@@ -11,6 +12,8 @@ group_id = ''
 vk_session = vk_api.VkApi(token=token)
 vk = vk_session.get_api()
 
+# get_category() - выдаст тебе список категорий
+# get_products(category) - выдаст тебе продукты из категории category
 menu_by_subcategory = {
     "Закуски": ["Брускетты", "Сырные тарелки", "Суши и роллы"],
     "Супы": ["Борщ", "Грибной суп", "Томатный суп с морепродуктами"],
@@ -95,6 +98,7 @@ def handle_main_menu(user_id):
 
 
 def handle_orders(user_id):
+    # get_cart_row(user_id) выдаст тебе все записи из корзины и сумму всей корзины (список из списков строк корзины, сумма корзины)
     current_order = user_cart.get(user_id, [])
     order_total_cost = calculate_total_cost(current_order)
 
@@ -106,10 +110,10 @@ def handle_orders(user_id):
             order_text += f"- {item}\n"
 
         keyboard = VkKeyboard(one_time=True)
-        keyboard.add_button("Управление корзиной", color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button("Адрес доставки", color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button("Время доставки", color=VkKeyboardColor.PRIMARY)
-        keyboard.add_button("Способ оплаты", color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button("Управление корзиной", color=VkKeyboardColor.PRIMARY) # в миро поменялось посмотри как должно меню выглядеть
+        keyboard.add_button("Адрес доставки", color=VkKeyboardColor.PRIMARY) # его в список для функции add_order
+        keyboard.add_button("Время доставки", color=VkKeyboardColor.PRIMARY)  # можешь убирать этот пункт, т.к. будет считаться автоматически
+        keyboard.add_button("Способ оплаты", color=VkKeyboardColor.PRIMARY) # его в список для add_order
         keyboard.add_button("Итоговая стоимость", color=VkKeyboardColor.PRIMARY)
         keyboard.add_button("Оформить заказ", color=VkKeyboardColor.POSITIVE)
         keyboard.add_button("Назад", color=VkKeyboardColor.NEGATIVE)
@@ -118,12 +122,14 @@ def handle_orders(user_id):
 
 # Функция для расчета итоговой стоимости заказа
 def calculate_total_cost(order):
+    # get_cart_row(user_id) здесь вызовешь для просмотра итоговой стоимости корзины заказа
     return len(order)
 
 
 #
 def handle_payment_method(user_id, method):
     if method in ["Карта", "Наличность"]:
+        #  сохраняй в определенный списко наличность или карта под значением 0 или 1, подробнее в функции add_order() - чему равна наличность, чему карта
         user_order_info["payment_method"] = method
         send_keyboard(user_id, f"Способ оплаты выбран: {method}", create_orders_keyboard())
     elif method == "Назад":
@@ -134,6 +140,7 @@ def handle_payment_method(user_id, method):
 
 #
 def create_payment_methods_keyboard():
+    #  сохраняй в определенный списко наличность или карта под значением 0 или 1, подробнее в функции add_order() - чему равна наличность, чему карта
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Карта", color=VkKeyboardColor.PRIMARY)
     keyboard.add_button("Наличность", color=VkKeyboardColor.PRIMARY)
@@ -150,9 +157,11 @@ def main():
             message = event.object.message.text.lower()
 
             if message == "старт":
+                # add_user - функция сохранит пользователя в БД, создаст для него корзину и прочее
                 handle_main_menu(user_id)
 
             elif message == "меню блюд" and user_id not in user_states:
+                # посмотри старый файл бота, там как раз то меню, что надо - inlne
                 keyboard = create_subcategories_keyboard("Закуски")
                 send_keyboard(user_id, "Выберите подкатегорию:", keyboard)
                 user_states[user_id] = "subcategory"
@@ -186,6 +195,7 @@ def main():
 
 # функция для обработки списка товаров на стопе
 def handle_stop_list(user_id):
+    # это можешь не делать, т.к одмен будет в телеграме менять состояние стопа продуктов
     if user_id in user_cart and user_cart[user_id]:
         stop_list_text = "Список товаров на стопе:\n"
         for item in stop_list:
