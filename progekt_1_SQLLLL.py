@@ -17,7 +17,8 @@ class Database:
         FOREIGN KEY (cart_id) REFERENCES cart(id)ON DELETE RESTRICT ON UPDATE CASCADE)  ''')
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS cart (id INTEGER PRIMARY KEY, user_id INTEGER, 
-        total INTEGER DEFAULT 0, FOREIGN KEY (user_id) REFERENCES users(id)ON DELETE RESTRICT ON UPDATE CASCADE)''')
+        total INTEGER DEFAULT 0, cart_status BOOL, FOREIGN KEY (user_id) 
+        REFERENCES users(id) ON DELETE RESTRICT ON UPDATE CASCADE)''')
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS cart_row (id INTEGER PRIMARY KEY, product_id INTEGER,
         amount INTEGER, cart_id INTEGER, status_in_order BOOL DEFAULT 1, FOREIGN KEY (cart_id) REFERENCES cart(id)
