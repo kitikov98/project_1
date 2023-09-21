@@ -238,6 +238,7 @@ def add_order_rating(user_id, id_order, review=" ", mark=4):
 ####################################################
 "admin panel"
 
+
 def change_user_category(user_id):
     pass
 
