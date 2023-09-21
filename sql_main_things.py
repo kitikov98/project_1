@@ -14,6 +14,10 @@ def convert_to_pic(str1):
 
 con = sl.connect('db.sqlite', check_same_thread=False)
 
+def get_cart_id(user_id):
+    cart_id = con.execute(f"""SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id 
+    WHERE cart_status = 1 and (vk_id={user_id} or tg_id={user_id})""").fetchone()[0]
+    return cart_id
 
 def get_category():
     """получение категорий, используйте для меню категорий"""
@@ -47,23 +51,24 @@ def add_user(vk_id, tg_id, name):
     elif tg_id is None:
         tg_id = "null"
     user_id = con.execute(f"""SELECT id FROM users WHERE vk_id ={vk_id} or tg_id={tg_id}""").fetchone()[0]
-    con.execute("""INSERT INTO cart (user_id, total) VALUES (?, ?)""", (user_id, 0))
+    con.execute("""INSERT INTO cart (user_id, total, cart_status) VALUES (?, ?, ?)""", (user_id, 0, 1))
     con.commit()
 
 
 def add_products_to_cart_row(user_id, product, amount):
     """ для добавления продуктов в корзину вам нужен id пользователя, название продукта и его количество.
     Пример(331, 'Жаркое', 1) """
+    cart_id = get_cart_id(user_id)
     total = con.execute(
-        f"SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[0]
-    cart_id = con.execute(
-        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[0]
+        f"""SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id
+         WHERE cart.id = {cart_id} and (vk_id={user_id} or tg_id={user_id})""").fetchone()[0]
     product_id = con.execute(f"SELECT id FROM products WHERE name = '{product}'").fetchone()[0]
     con.execute('''INSERT INTO cart_row (cart_id, product_id, amount) VALUES (?, ?, ?)''',
                 (cart_id, product_id, amount))
     con.commit()
     new_total = con.execute(
-        f"""SELECT SUM(amount*price) as total FROM cart_row INNER JOIN products ON cart_row.product_id = products.id WHERE cart_id = {cart_id}""").fetchone()[0]
+        f"""SELECT SUM(amount*price) as total FROM cart_row
+         INNER JOIN products ON cart_row.product_id = products.id WHERE cart_id = {cart_id}""").fetchone()[0]
     con.execute(f"""UPDATE cart SET total = {new_total} WHERE total = {total} and id = {cart_id}""")
     con.commit()
 
@@ -73,8 +78,7 @@ def del_cart_line(user_id, cart_row_id):
     пользователя """
     total = con.execute(
         f"SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[0]
-    cart_id = con.execute(
-        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    cart_id = get_cart_id(user_id)
     amount = con.execute(f'SELECT amount FROM cart_row WHERE id ={cart_row_id}').fetchone()[0]
     price = con.execute(
         f"SELECT price FROM products INNER JOIN cart_row ON cart_row.product_id=products.id WHERE cart_row.id = {cart_id}").fetchone()[0]
@@ -87,8 +91,7 @@ def delete_by_dish(user_id, product):
     """ удаление записи из корзины по id пользователя и нзванию продукта """
     total = con.execute(
         f"SELECT total FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}").fetchone()[0]
-    cart_id = con.execute(
-        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    cart_id = get_cart_id(user_id)
     product_id = con.execute(f"""SELECT id FROM products WHERE name = '{product}'""").fetchone()[0]
     amount = con.execute(f'SELECT amount FROM cart_row WHERE product_id ={product_id}').fetchone()[0]
     cart_row_id = con.execute(f'SELECT id FROM cart_row WHERE product_id = {product_id} and cart_id={cart_id}').fetchone()[0]
@@ -104,10 +107,10 @@ def delete_by_dish(user_id, product):
 def get_cart_row(user_id):
     """используйте для просмотра строк корзины клиента (cart_row_id, блюдо, количество, номер корзины привязанный к
     пользователю) - (7, 'Кальмары на гриле', 1, 2) """
-    cart_id = con.execute(
-        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    cart_id = get_cart_id(user_id)
     carts = con.execute(
-        f"""SELECT id,  (SELECT name FROM products WHERE id = product_id), amount, cart_id FROM cart_row WHERE cart_id={cart_id} and status_in_order=1""").fetchall()
+        f"""SELECT id,  (SELECT name FROM products WHERE id = product_id), amount, cart_id FROM cart_row WHERE cart_id={cart_id} 
+        and cart_status = 1 and status_in_order=1 and """).fetchall()
     total = con.execute(f"SELECT total From cart WHERE id = {cart_id}").fetchone()[0]
     return carts, total
 
@@ -125,8 +128,7 @@ def get_description_dish(str1):
 def add_to_order(user_id, list1):
     """ для добавления заказа в БД нужно имя пользователя и список [адрес доставки, выбранным типом оплаты
     0-наличность 1-карта] """
-    cart_id = con.execute(
-        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    cart_id = get_cart_id(user_id)
     status = 1
     now = datetime.now()
     max_time_to_cook = max(con.execute(
@@ -137,35 +139,35 @@ def add_to_order(user_id, list1):
         f"""INSERT INTO orders (user_address, date_delivery, status, cart_id, payment) VALUES (?, ?, ?, ?, ?)""",
         (list1[0], time_to_cook, status, cart_id, list1[1]))
     con.execute(f"""UPDATE cart_row SET status_in_order = 0 WHERE status_in_order = 1 and cart_id = {cart_id}""")
+    con.execute(f"""UPDATE cart SET cart_status = 0 WHERE cart_status = 1 and id = {cart_id}""")
     # ↑ изменение статуса продукта с "в корзине", на "в заказе"
+    id_user_in_users = con.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id}""").fetchone()[0]
+    con.execute("""INSERT INTO cart (user_id, total, cart_status) VALUES (?, ?, ?)""", (id_user_in_users, 0, 1))
     con.commit()
 
 
 def get_orders(user_id):
     """ получение данных заказа"""
-    cart_id = con.execute(
-        f"""SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
+    cart_id = get_cart_id(user_id)
     orders = con.execute(f"SELECT * FROM orders WHERE cart_id={cart_id} and status = 1").fetchall()
     return orders
 
 
 def change_order(user_id, order_id):
     """ для изменения заказа нужен id пользователя и id заказа, который можно получить используя метод get_orders"""
-    cart_id = con.execute(
-        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id} ").fetchone()[0]
+    cart_id = get_cart_id(user_id)
+    con.execute(f"""DELETE FROM cart WHERE id ={cart_id}""")
+    cart_id = con.execute(f"""SELECT cart_id FROM orders WHERE id = {order_id}""").fetchone()[0]
+    con.execute(f"""UPDATE cart SET cart_status = 1 WHERE cart_status = 0 and id={cart_id}""")
     con.execute(f"""UPDATE cart_row SET status_in_order = 1 WHERE status_in_order = 0 and cart_id = {cart_id}""")
     con.execute(f"""DELETE FROM orders WHERE cart_id={cart_id} and id={order_id}""")
     con.commit()
 
+# change_order(1122, 2)
 
-def cancel_order(user_id, order_id):
-    """ для отмены заказ нужен id пользователя и id заказа из таблицы заказов"""
-    cart_id = con.execute(
-        f"SELECT cart.id FROM cart INNER JOIN users ON cart.user_id = users.id WHERE vk_id ={user_id} or tg_id={user_id}").fetchone()[0]
-    con.execute(f"""DELETE FROM orders WHERE cart_id={cart_id} and id={order_id}""")
-    con.execute(f"DELETE FROM cart_row WHERE cart_id ={cart_id}")
-    total = con.execute(f"""SELECT total FROM cart WHERE id = {cart_id}""").fetchone()[0]
-    con.execute(f"UPDATE cart SET total=0 WHERE total={total}")
+def cancel_order(order_id):
+    """ для отмены заказ нужен id заказа из таблицы заказов"""
+    con.execute(f"""DELETE FROM orders WHERE id={order_id}""")
     con.commit()
 
 
@@ -244,11 +246,11 @@ def change_user_category(user_id):
 # print(add_product_rating(1122, 'отвратительный салат', 'Цезарь', 1))
 
 # change_order(1122, 2)
-# add_to_order(1122, ['г.Минск, ул. Сурганова 37/3', 0])
+# add_to_order(1122, ['г.Минск, пр. Машерова 12', 0])
 # add_user(1122, None, 'John')
 # add_products_to_cart_row(1122, 'Борщ', 1)
 # add_products_to_cart_row(1122, 'Цезарь', 2)
-# add_products_to_cart_row(1122, 'Греческий', 1)
+# add_products_to_cart_row(1122, 'Греческий', 3)
 # add_products_to_cart_row(1122, 'Шоколадный фондан', 3)
 
 # print(get_cart_row(1122))
