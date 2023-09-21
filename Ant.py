@@ -11,7 +11,6 @@ group_id = ''
 vk_session = vk_api.VkApi(token=token)
 vk = vk_session.get_api()
 
-
 menu_by_subcategory = {
     "Закуски": ["Брускетты", "Сырные тарелки", "Суши и роллы"],
     "Супы": ["Борщ", "Грибной суп", "Томатный суп с морепродуктами"],
@@ -27,18 +26,17 @@ menu_by_subcategory = {
 
 user_states = {}
 
-# Корзина пользователя
 user_cart = {}
 
-# Информация о заказе пользователя
 user_order_info = {
     "address": "",
     "delivery_time": "",
     "payment_method": "",
 }
 
+stop_list = set()
 
-# Отправка сообщения с клавой
+
 def send_keyboard(user_id, text, keyboard):
     vk.messages.send(
         user_id=user_id,
@@ -46,7 +44,6 @@ def send_keyboard(user_id, text, keyboard):
         message=text,
         keyboard=keyboard.get_keyboard()
     )
-
 
 
 def create_main_menu_keyboard():
@@ -59,7 +56,6 @@ def create_main_menu_keyboard():
     return keyboard
 
 
-
 def create_subcategories_keyboard(subcategory):
     keyboard = VkKeyboard(one_time=True)
     for item in menu_by_subcategory.get(subcategory, []):
@@ -69,7 +65,6 @@ def create_subcategories_keyboard(subcategory):
     return keyboard
 
 
-# Выбрать из подкатегории и обратно
 def handle_subcategory(user_id, subcategory):
     if subcategory in menu_by_subcategory:
         keyboard = create_subcategories_keyboard(subcategory)
@@ -78,30 +73,27 @@ def handle_subcategory(user_id, subcategory):
     elif subcategory == "Назад в главное меню":
         handle_main_menu(user_id)
     else:
+        #
         handle_main_menu(user_id)
 
 
-#  добавление блюда в корзину пользователя
 def add_to_cart(user_id, item):
     if user_id not in user_cart:
         user_cart[user_id] = []
     user_cart[user_id].append(item)
 
 
-#  обработка выбора блюда из подкатегории
 def handle_dish_selection(user_id, dish):
     add_to_cart(user_id, dish)
     send_keyboard(user_id, f"{dish} добавлено в корзину.", create_subcategories_keyboard(user_states[user_id]))
 
 
-# Обработка гл меню
 def handle_main_menu(user_id):
     keyboard = create_main_menu_keyboard()
     send_keyboard(user_id, "Выберите действие:", keyboard)
-    user_states[user_id] = "main_menu"  # Устанавливаем состояние "главное меню"
+    user_states[user_id] = "main_menu"
 
 
-#  Обработка заказов
 def handle_orders(user_id):
     current_order = user_cart.get(user_id, [])
     order_total_cost = calculate_total_cost(current_order)
@@ -126,11 +118,10 @@ def handle_orders(user_id):
 
 # Функция для расчета итоговой стоимости заказа
 def calculate_total_cost(order):
-    # Здесь должна быть функция для расчета
     return len(order)
 
 
-# Оплата
+#
 def handle_payment_method(user_id, method):
     if method in ["Карта", "Наличность"]:
         user_order_info["payment_method"] = method
@@ -141,14 +132,13 @@ def handle_payment_method(user_id, method):
         send_keyboard(user_id, "Выберите способ оплаты:", create_payment_methods_keyboard())
 
 
-#  создание клавиатуры с кнопками способов оплаты
+#
 def create_payment_methods_keyboard():
     keyboard = VkKeyboard(one_time=True)
     keyboard.add_button("Карта", color=VkKeyboardColor.PRIMARY)
     keyboard.add_button("Наличность", color=VkKeyboardColor.PRIMARY)
     keyboard.add_button("Назад", color=VkKeyboardColor.NEGATIVE)
     return keyboard
-
 
 
 def main():
@@ -178,6 +168,7 @@ def main():
                 if user_states[user_id] == "subcategory":
                     handle_main_menu(user_id)
                 elif user_states[user_id] == "main_menu":
+
                     pass
 
             elif message == "корзина":
@@ -188,6 +179,25 @@ def main():
 
             elif "payment_method" not in user_order_info:
                 handle_payment_method(user_id, message)
+
+            elif message == "список товаров в корзине":
+                handle_stop_list(user_id)
+
+
+# функция для обработки списка товаров на стопе
+def handle_stop_list(user_id):
+    if user_id in user_cart and user_cart[user_id]:
+        stop_list_text = "Список товаров на стопе:\n"
+        for item in stop_list:
+            stop_list_text += f"- {item}\n"
+
+        keyboard = VkKeyboard(one_time=True)
+        for item in user_cart[user_id]:
+            keyboard.add_button(f"Убрать {item} со стопа", color=VkKeyboardColor.PRIMARY)
+        keyboard.add_button("Назад в корзину", color=VkKeyboardColor.SECONDARY)
+        send_keyboard(user_id, stop_list_text, keyboard)
+    else:
+        send_keyboard(user_id, "Ваша корзина пуста.", create_main_menu_keyboard())
 
 
 if __name__ == "__main__":
