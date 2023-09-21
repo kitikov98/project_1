@@ -9,7 +9,9 @@ import json
 from dotenv import load_dotenv
 import os
 from os.path import join, dirname
-from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line, get_cart_row, get_description_dish, add_to_order, delete_by_dish
+from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line
+from sql_main_things import get_cart_row, get_description_dish, add_to_order, delete_by_dish, get_orders,  change_order
+from sql_main_things import cancel_order, add_product_rating, get_product_rating, get_orders_rating, add_order_rating
 #import gspread
 #from google_dict_stat import stat_user, stat_cat, stat_shop, dict1, new_dict2, dict2
 
@@ -34,10 +36,10 @@ bot = telebot.TeleBot(token)
 lst_dishes = []
 #блюдо сохраниться для добавления в корзину
 temp_dish = ""
-# #список блюд корзины, используется при удалении блюд, но удаляться будет блюдо на которое нажали
-# lst_dish_cart = []
 #блюдо для удаления
 dish_for_delete = ""
+#для сохранения номера заказа
+number_order = ""
 #вынесу для видимости в 2 декораторах
 user_id = ''
 markupI_start = InlineKeyboardMarkup()
@@ -76,12 +78,21 @@ lst_payment = ["Карта", "Наличность", "Меню категори�
 markupI_payment = InlineKeyboardMarkup()
 for x in lst_payment:
     markupI_payment.add(InlineKeyboardButton(x, callback_data='8'+x))
-
+#клава для изменения, удаления заказа
+lst_order = ["Изменить заказ", "Отменить заказ", "Меню категорий блюд"]
+markupI_order = InlineKeyboardMarkup()
+for x in lst_order:
+    markupI_order.add(InlineKeyboardButton(x, callback_data='9'+x))
 
 
 @bot.message_handler(content_types=['text'])
 def start(message):
-    global user_id, address
+    global user_id, address, number_order
+    try:
+        message.text = int(message.text)
+    except:
+        pass
+    print(f"message.text, type(message.text) {message.text}, {type(message.text)}")
     if message.text == '/start':
         chat_id = message.chat.id
         print(f"chat_id {chat_id}")
@@ -92,16 +103,22 @@ def start(message):
         except:
             pass
         bot.send_message(message.chat.id, "Выбирайте:", reply_markup=markupI_start)
+    #обработка номера заказа для удаления или редактирования
+    elif  type(message.text) == int:
+        number_order = message.text
+        bot.send_message(message.chat.id, f"Заказ под номером {number_order} желаете:", reply_markup=markupI_order )
     #обработка ввода адреса
     else:
         address = message.text
         print(f"address {address}")
 
+    print(f"get_orders after start {get_orders(user_id)}")
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
-    global user_id, lst_dishes, temp_dish, lst_dish_cart, dish_for_delete, dict_del_dish, address, lst_address_payment, address, payment
+    global user_id, lst_dishes, temp_dish, lst_dish_cart, dish_for_delete, dict_del_dish, \
+        address, lst_address_payment, address, payment, number_order
     bot.answer_callback_query(callback_query_id=call.id, )
     # print(call)
     id = call.message.chat.id
@@ -114,6 +131,7 @@ def query_handler(call):
     total_ = cart_total[1]
     print(f"cart_ {cart_}")
     print(f"total_ {total_}")
+    print(f"get_orders in 2 decorator {get_orders(user_id)}")
     # удаление всех кнопок клавиатуры
     markupI_cat_val.keyboard.clear()
     if flag == "1":
@@ -129,7 +147,16 @@ def query_handler(call):
         elif data =="Статистика блюд":
             pass
         elif data =="Заказы":
-            pass
+            #получу все заказы со статусом 1(доступные для редактирования), статус 0 зазакам дает административка
+            print(f"get_orders in orders {get_orders(user_id)}")
+            lst_orders = get_orders(user_id)  # [(1, '', '2023-09-20 18:10:23.375185', 1, 1, 0), (2, 'Витебск, ул. Ленина, 89', '2023-09-20 18:30:17.736339', 1, 1, 1)]
+            info_orders = "Заказ оформлен!\nВведите номер заказа для отмены или изменения и нажмите Enter:\n" +"№ заказа:  " + \
+                          "адрес:                   " + "                          ожидаемое время\n"
+            for item in lst_orders:
+                info_orders +=  str(item[0]) + "                  " + str(item[1]) + "  " + str(item[2][11:]) + '\n'
+            # print(f"change_order {change_order(user_id, 3)}")
+            # print(f"change_order {change_order(user_id, 4)}")
+            bot.send_message(call.message.chat.id, info_orders)
         elif data == "Назад в главное меню":
             bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
     elif flag == '2':
@@ -179,6 +206,7 @@ def query_handler(call):
             lst_address_payment.append(payment)
             print(f"lst_address_payment {lst_address_payment}")
             add_to_order(user_id, lst_address_payment)
+            bot.send_message(call.message.chat.id, "Оформить заказ!")
     #если блюдо прилетело из меню по удалению блюд(нажали на блюдо в этом меню)
     elif flag == "6":
         print(f"Блюдо летит для удаления {data}")
@@ -198,8 +226,20 @@ def query_handler(call):
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         elif data == "Карта":
             payment = "1"
+            bot.send_message(call.message.chat.id, "Далее:\n\
+            *назад в меню категорий блюд\n*назад в главное меню\n*корзина\n*оформить заказ")
         elif data == "Наличность":
             payment = "0"
+    elif flag == "9":
+        if data == "Меню категорий блюд":
+            bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
+        elif data == "Изменить заказ":
+            change_order(user_id, number_order)
+            bot.send_message(call.message.chat.id, "Заказ изменен!")
+        elif data == "Отменить заказ":
+            cancel_order(user_id, number_order)
+            bot.send_message(call.message.chat.id, "Заказ отменен!")
+
 
 
 
