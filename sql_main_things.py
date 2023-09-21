@@ -244,6 +244,15 @@ def add_order_rating(user_id, id_order, review=" ", mark=4):
 ####################################################
 "admin panel"
 
+def get_user_category(user_id):
+    try:
+        cat = con.execute(f"SELECT category FROM users WHERE tg_id = {user_id}").fetchone()[0]
+        return cat
+    except:
+        return f'Данного пользователя не существует либо он пользуется vk-ботом'
+
+
+
 
 def change_user_category(user_id):
     pass

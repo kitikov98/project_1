@@ -3,26 +3,30 @@ import telebot
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
+from sql_main_things import get_user_category
 
-token = "6182506398:AAFQz06nOEpCeBLrJuK9LQ-D-OH8nhWtf7o"
+token = "6119423257:AAHaggUuah3WlSRlp2cuNz5R0PQYYX1w8rM"
 bot = telebot.TeleBot(token)
+
+menu_1 = ["Статусы заказов","Отзывы на заказы", "Отзывы на блюда", "Управление администрацией", "Управление меню блюд"]
+menu_2 = ["Добавление", "Изменение", "Удаление", "Назад"]
 
 # Клавиатура для администраторов
 admin_markup = InlineKeyboardMarkup()
-admin_markup.row(InlineKeyboardButton("Статусы заказов"), InlineKeyboardButton("Отзывы на заказы"),
-                 InlineKeyboardButton("Отзывы на блюда"))
-
 # Клавиатура для администраторов второго разряда
 admin2_markup = InlineKeyboardMarkup()
-admin2_markup.row(InlineKeyboardButton("Статусы заказов"), InlineKeyboardButton("Отзывы на заказы"),
-                  InlineKeyboardButton("Отзывы на блюда"))
-admin2_markup.row(InlineKeyboardButton("Управление администрацией"), InlineKeyboardButton("Управление меню блюд"))
-
 # Клавиатура для управления администрацией
 admin_control_markup = InlineKeyboardMarkup()
-admin_control_markup.row(InlineKeyboardButton("Добавление"), InlineKeyboardButton("Изменение"),
-                         InlineKeyboardButton("Удаление"))
-admin_control_markup.row(InlineKeyboardButton("Назад"))
+
+for x1 in menu_1[:3]:
+    admin_markup.add(InlineKeyboardButton(x1, callback_data="A" + str(x1)))
+
+for x2 in menu_1:
+    admin2_markup.add(InlineKeyboardButton(x2, callback_data="B" + str(x2)))
+
+for x3 in menu_2:
+    admin_control_markup.add(InlineKeyboardButton(x3, callback_data="B" + str(x3)))
+
 
 
 @bot.message_handler(commands=['start_admin_panel'])
@@ -40,24 +44,23 @@ def start_admin_panel(message):
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
-    if call.data == "Статусы заказов":
+    flag = call.data[0:1]
+    data = call.data[1:]
+    if data == "Статусы заказов":
         bot.send_message(call.message.chat.id, "Информация о заказе",
                          reply_markup=InlineKeyboardMarkup().row(InlineKeyboardButton("Изменить статус"),
                                                                  InlineKeyboardButton("Назад")))
-    elif call.data == "Отзывы на заказы" or call.data == "Отзывы на блюда":
-        bot.send_message(call.message.chat.id, "Информация об отзыве (заказ, блюдо)",
-                         reply_markup=InlineKeyboardMarkup().row(InlineKeyboardButton("Принять"),
-                                                                 InlineKeyboardButton("Не принимать")))
-    elif call.data == "Управление администрацией":
-        bot.send_message(call.message.chat.id, "Выберите действие", reply_markup=admin_control_markup)
+    # elif call.data == "Отзывы на заказы" or call.data == "Отзывы на блюда":
+    #     bot.send_message(call.message.chat.id, "Информация об отзыве (заказ, блюдо)",
+    #                      reply_markup=InlineKeyboardMarkup().row(InlineKeyboardButton("Принять"),
+    #                                                              InlineKeyboardButton("Не принимать")))
+    # elif call.data == "Управление администрацией":
+    #     bot.send_message(call.message.chat.id, "Выберите действие", reply_markup=admin_control_markup)
 
 
 def check_admin_category(user_id):
-    # Проверяем значение колонки category для пользователя в БД
-    # Возвращаем 1 для администратора первого разряда
-    # Возвращаем 2 для администратора второго разряда
-    # Возвращаем 0 для обычного пользователя
-    return 1
+    cat = get_user_category(user_id)
+    return cat
 
 
 bot.polling()
