@@ -84,12 +84,11 @@ def del_cart_line(user_id, cart_row_id):
     cart_id = get_cart_id(user_id)
     amount = con.execute(f'SELECT amount FROM cart_row WHERE id ={cart_row_id}').fetchone()[0]
     price = con.execute(
-        f"SELECT price FROM products INNER JOIN cart_row ON cart_row.product_id=products.id WHERE cart_row.id = {cart_id}").fetchone()[0]
+        f"SELECT price FROM products INNER JOIN cart_row ON cart_row.product_id=products.id WHERE cart_row.id = {cart_row_id}").fetchone()[0]
     new_total = total - (amount * price)
     con.execute(f"""DELETE FROM cart_row WHERE cart_id={cart_id} and id={cart_row_id}""")
     con.execute(f"""UPDATE cart SET total = {new_total} WHERE total ={total} and id = {cart_id}""")
     con.commit()
-
 
 
 def delete_by_dish(user_id, product):
@@ -239,10 +238,14 @@ def add_order_rating(user_id, id_order, review=" ", mark=4):
         return f'неверно выставлено значение отметки рейтинга'
 
 
-
-
 ####################################################
 "admin panel"
+
+
+def adm_get_ord():
+    orders = con.execute(f'SELECT * FROM orders WHERE status = 1').fetchall()
+    return orders
+
 
 def get_user_category(user_id):
     try:
@@ -252,10 +255,20 @@ def get_user_category(user_id):
         return f'Данного пользователя не существует либо он пользуется vk-ботом'
 
 
+def adm_change_order_status(order_id):
+    con.execute(f"UPDATE orders SET status = 0 WHERE status = 1 and id = {order_id} ")
+    con.commit()
 
 
-def change_user_category(user_id):
-    pass
+def adm_change_to_first_rank(user_id):
+    con.execute(f"UPDATE users SET category = 1 WHERE category = 0 or category = 2 and tg_id = {user_id} ")
+    con.commit()
+
+
+def adm_change_to_second_rank(user_id):
+    con.execute(f"UPDATE users SET category = 2 WHERE category = 0 or category = 1 and tg_id = {user_id} ")
+    con.commit()
+
 
 
 # print(add_product_rating(1122, 'первый', 'Борщ', 4))

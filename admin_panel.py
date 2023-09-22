@@ -3,7 +3,7 @@ import telebot
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
-from sql_main_things import get_user_category
+from sql_main_things import get_user_category, adm_get_ord, adm_change_order_status
 
 token = "6119423257:AAHaggUuah3WlSRlp2cuNz5R0PQYYX1w8rM"
 bot = telebot.TeleBot(token)
@@ -42,20 +42,23 @@ def start_admin_panel(message):
         bot.reply_to(message, "У вас нет прав администратора")
 
 
+
+
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
     flag = call.data[0:1]
     data = call.data[1:]
-    if data == "Статусы заказов":
+    print(data)
+    if flag == 'D':
+        adm_change_order_status(data)
+        bot.send_message(call.message.chat.id, 'status changed')
+    elif data == "Статусы заказов":
+        stat = InlineKeyboardMarkup()
+        stat_list = adm_get_ord()
+        for x4 in stat_list:
+            stat.add(InlineKeyboardButton(str(x4[1]), callback_data="D" + str(x4[0])))
         bot.send_message(call.message.chat.id, "Информация о заказе",
-                         reply_markup=InlineKeyboardMarkup().row(InlineKeyboardButton("Изменить статус"),
-                                                                 InlineKeyboardButton("Назад")))
-    # elif call.data == "Отзывы на заказы" or call.data == "Отзывы на блюда":
-    #     bot.send_message(call.message.chat.id, "Информация об отзыве (заказ, блюдо)",
-    #                      reply_markup=InlineKeyboardMarkup().row(InlineKeyboardButton("Принять"),
-    #                                                              InlineKeyboardButton("Не принимать")))
-    # elif call.data == "Управление администрацией":
-    #     bot.send_message(call.message.chat.id, "Выберите действие", reply_markup=admin_control_markup)
+                         reply_markup=stat)
 
 
 def check_admin_category(user_id):
