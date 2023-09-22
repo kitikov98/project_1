@@ -55,6 +55,14 @@ def add_user(vk_id, tg_id, name):
     con.commit()
 
 
+def add_delivery(user_id, list1):
+    """Добавление адреса доставки и способа оплаты, нужен id пользователя и список["Адрес доставки", выбранный типом оплаты
+    0-наличность 1-карта]"""
+    id_user = con.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id}""").fetchone()[0]
+    con.execute('''INSERT INTO delivery (user_id, user_address, payment) VALUES (?, ?,  ?)''', (id_user, list1[0], list1[1]))
+    con.commit()
+
+
 def add_products_to_cart_row(user_id, product, amount):
     """ для добавления продуктов в корзину вам нужен id пользователя, название продукта и его количество.
     Пример(331, 'Жаркое', 1) """
@@ -119,7 +127,6 @@ def get_cart_row(user_id):
     return carts, total
 
 
-
 def get_description_dish(str1):
     """Вводит основные параметры блюда и объект картинки. Примерно так: (('Борщ', 'Говядина, картофель, лук, марковь,
     свекла, капуста, чеснок, томатная паста, уксус, лавровый лист ', 12.0, '55:00'),
@@ -130,19 +137,20 @@ def get_description_dish(str1):
     return product_desc, pic
 
 
-def add_to_order(user_id, list1):
-    """ для добавления заказа в БД нужно имя пользователя и список [адрес доставки, выбранным типом оплаты
-    0-наличность 1-карта] """
+def add_to_order(user_id):
+    """ для добавления заказа в БД нужно id пользователя  """
     cart_id = get_cart_id(user_id)
     status = 1
+    delivery_id = con.execute(f"""SELECT delivery.id FROM delivery 
+     INNER JOIN users ON delivery.user_id = users.id WHERE vk_id={user_id} or tg_id={user_id}""").fetchone()[0]
     now = datetime.now()
     max_time_to_cook = max(con.execute(
         f"SELECT time_to_cook FROM products INNER JOIN cart_row ON cart_row.product_id = products.id INNER JOIN cart ON cart.id=cart_row.cart_id WHERE cart.id = {cart_id}").fetchall())[0]
     max_time_to_cook = timedelta(minutes=datetime.strptime(max_time_to_cook, "%M:%S").minute)
     time_to_cook = now + max_time_to_cook + timedelta(minutes=30)
     con.execute(
-        f"""INSERT INTO orders (user_address, date_delivery, status, cart_id, payment) VALUES (?, ?, ?, ?, ?)""",
-        (list1[0], time_to_cook, status, cart_id, list1[1]))
+        f"""INSERT INTO orders (date_delivery, status, cart_id, delivery_id) VALUES (?, ?, ?, ?)""",
+        (time_to_cook, status, cart_id, delivery_id))
     con.execute(f"""UPDATE cart_row SET status_in_order = 0 WHERE status_in_order = 1 and cart_id = {cart_id}""")
     con.execute(f"""UPDATE cart SET cart_status = 0 WHERE cart_status = 1 and id = {cart_id}""")
     # ↑ изменение статуса продукта с "в корзине", на "в заказе"
@@ -237,6 +245,7 @@ def add_order_rating(user_id, id_order, review=" ", mark=4):
     except:
         return f'неверно выставлено значение отметки рейтинга'
 
+
 # add_order_rating(463971847, 3, 'всё крута', 5)
 ####################################################
 "admin panel"
@@ -281,17 +290,19 @@ def adm_get_rating_ord():
 
 def adm_get_ord_rewiew(order_id):
     """ выдача информации по отзыву"""
-    pass
+    review_mark = con.execute(f'SELECT rating, comment FROM orders_rating WHERE id ={order_id}').fetchone()
+    return review_mark
 
 
-
+# add_user(None, 1122, 'Павлович Илья')
+# add_delivery(1122, ['Сурганова 37/3', 0])
 # print(add_product_rating(1122, 'первый', 'Борщ', 4))
 # print(get_product_rating('Борщ'))
 # print(add_order_rating(1122, 'быстро доставили', 1))
 # print(add_product_rating(1122, 'отвратительный салат', 'Цезарь', 1))
 
 # change_order(1122, 2)
-# add_to_order(1122, ['г.Минск, пр. Машерова 1555', 0])
+# add_to_order(1122)
 # add_user(1122, None, 'John')
 # add_products_to_cart_row(1122, 'Борщ', 1)
 # add_products_to_cart_row(1122, 'Цезарь', 1)
