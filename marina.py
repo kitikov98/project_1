@@ -60,7 +60,7 @@ lst_start = ["Меню категорий блюд", "Корзина", "Стат
 for y in lst_start:
     markupI_start.add(InlineKeyboardButton(y, callback_data='1'+y))
 #клавиатура по кнопке корзина для дальнейшего управления
-lst_for_cart = ["Удаление из корзины", "Адрес доставки", "Способ оплаты", "Оформить заказ", "Меню категорий блюд"]
+lst_for_cart = ["Удаление из корзины", "Адрес доставки", "Способ оплаты", "Оформить заказ", "Назад в главное меню"]
 markupI_management_cart = InlineKeyboardMarkup()
 for x in lst_for_cart:
     markupI_management_cart.add(InlineKeyboardButton(x, callback_data='5'+x))
@@ -68,11 +68,11 @@ for x in lst_for_cart:
 markupI_delete_cart = InlineKeyboardMarkup()
 address = ""
 payment = ""
-lst_address = ["Применить адрес", "Меню категорий блюд"]
+lst_address = ["Применить адрес", "Назад в главное меню"]
 markupI_address = InlineKeyboardMarkup()
 for x in lst_address:
     markupI_address.add(InlineKeyboardButton(x, callback_data='7'+x))
-lst_payment = ["Карта", "Наличность", "Меню категорий блюд"]
+lst_payment = ["Карта", "Наличность", "Назад в главное меню"]
 markupI_payment = InlineKeyboardMarkup()
 for x in lst_payment:
     markupI_payment.add(InlineKeyboardButton(x, callback_data='8'+x))
@@ -96,6 +96,7 @@ def start(message):
         print(f"chat_id {chat_id}")
         user_id = message.from_user.id
         print(f"user_id {user_id}")
+        #заберет и имя, и фамилию
         try:
             add_user(None, message.from_user.id, message.from_user.first_name + ' ' + message.from_user.last_name)
         except:
@@ -104,7 +105,7 @@ def start(message):
     #обработка номера заказа для удаления или редактирования
     elif  type(message.text) == int:
         number_order = message.text
-        bot.send_message(message.chat.id, f"Заказ под номером {number_order} желаете:", reply_markup=markupI_order )
+        bot.send_message(message.chat.id, f"Что желаете сделать № {number_order}?", reply_markup=markupI_order )
     #обработка ввода адреса
     else:
         address = message.text
@@ -150,14 +151,16 @@ def query_handler(call):
             lst_orders = get_orders(user_id)
             print("in orders")
             print(f"lst_order {lst_orders}")
-            info_orders = "Заказ оформлен!\nВведите номер заказа для отмены или изменения и нажмите Enter:\n" +"№ заказа:  " + \
-                          "адрес:                   " + "                          ожидаемое время\n"
+            # info_orders = "Заказ оформлен!\nВведите номер заказа для отмены или изменения и нажмите Enter:\n" +"№ заказа:  " + \
+            #               "адрес:                   " + "                          ожидаемое время\n"
+            info_orders = "Заказ оформлен!\n" + "Информация о заказах(№ заказа, адрес, ожидаемое время)\n"
             for item in lst_orders:
                 #None формируется после отмены заказа
                 if item == None:
                     continue
                 else:
-                    info_orders +=  str(item[0]) + "                  " + str(item[1]) + "  " + str(item[2][11:]) + '\n'
+                    info_orders += str(item[0]) + ". " + str(item[1]) + ". " + str(item[2][11:]) + '\n'
+                    #info_orders +=  str(item[0]) + "                  " + str(item[1]) + "  " + str(item[2][11:]) + '\n'
             # print(f"change_order {change_order(user_id, 3)}")
             # print(f"change_order {change_order(user_id, 4)}")
             bot.send_message(call.message.chat.id, info_orders)
@@ -186,13 +189,13 @@ def query_handler(call):
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         elif data == "Добавить в корзину":
             # #??уточнить еще раз про amount, 2 клавы появляются тектовая с инфо, что в корзине, и с флагом 5 Управление корзиной...
-            print(f"блюдо летит в добавить в корзину {temp_dish}")
+            print(f"Блюдо летит в добавить в корзину {temp_dish}")
             add_products_to_cart_row(user_id, temp_dish, 1)
             bot.send_message(call.message.chat.id, "Блюдо добавлено в корзину!")
 
     #флаг 5-клава управления корзиной...
     elif flag == "5":
-        if data == "Меню категорий блюд":
+        if data == "Назад в главное меню":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         elif data == "Удаление из корзины":
             markupI_delete_cart.keyboard.clear()
@@ -226,19 +229,21 @@ def query_handler(call):
             delete_by_dish(user_id, data)
             bot.send_message(call.message.chat.id, f"Блюдо {data} удалено из корзины!")
     elif flag == "7":
-        if data == "Меню категорий блюд":
-            bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
+        if data == "Назад в главное меню":
+            bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
         else:# кнопка применить заказ
             bot.send_message(call.message.chat.id, "Адрес записан!")
     elif flag == "8":
-        if data == "Меню категорий блюд":
-            bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
+        if data == "Назад в главное меню":
+            bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
         elif data == "Карта":
             payment = "1"
-            bot.send_message(call.message.chat.id, "Для оформления заказа:\n*Меню категорий блюд\n*Назад в главное меню\n*Корзина\n*Оформить заказ")
+            #bot.send_message(call.message.chat.id, "Для оформления заказа:\n*Меню категорий блюд\n*Назад в главное меню\n*Корзина\n*Оформить заказ")
+            bot.send_message(call.message.chat.id, "Далее можете оформить заказ")
         elif data == "Наличность":
             payment = "0"
-            bot.send_message(call.message.chat.id, "Для оформления заказа:\n*Меню категорий блюд\n*Назад в главное меню\n*Корзина\n*Оформить заказ")
+            #bot.send_message(call.message.chat.id, "Для оформления заказа:\n*Меню категорий блюд\n*Назад в главное меню\n*Корзина\n*Оформить заказ")
+            bot.send_message(call.message.chat.id, "Далее можете оформить заказ")
     elif flag == "9":
         if data == "Меню категорий блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
