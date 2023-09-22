@@ -302,6 +302,7 @@ def adm_get_ord_rewiew(order_id):
 # add_user(None, 1122, 'Павлович Илья')
 # add_delivery(1122, ['Сурганова 37/3', 0])
 # print(add_product_rating(1122, 'первый', 'Борщ', 4))
+# add_order_rating(463971847,1,'всё нормуль', 5)
 # print(get_product_rating('Борщ'))
 # print(add_order_rating(1122, 'быстро доставили', 1))
 # print(add_product_rating(1122, 'отвратительный салат', 'Цезарь', 1))
