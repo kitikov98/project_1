@@ -299,6 +299,15 @@ def adm_get_ord_rewiew(order_id):
     return review_mark
 
 
+def adm_accept_stat_ord(ord_rat_id):
+    con.execute(f"UPDATE orders_rating SET status='принят' WHERE id ={ord_rat_id}")
+    con.commit()
+
+
+def adm_refuse_stat_ord(ord_rat_id):
+    con.execute(f"UPDATE orders_rating SET status='отклонен' WHERE id ={ord_rat_id}")
+    con.commit()
+
 # add_user(None, 1122, 'Павлович Илья')
 # add_delivery(1122, ['Сурганова 37/3', 0])
 # print(add_product_rating(1122, 'первый', 'Борщ', 4))
