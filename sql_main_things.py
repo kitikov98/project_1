@@ -84,12 +84,11 @@ def del_cart_line(user_id, cart_row_id):
     cart_id = get_cart_id(user_id)
     amount = con.execute(f'SELECT amount FROM cart_row WHERE id ={cart_row_id}').fetchone()[0]
     price = con.execute(
-        f"SELECT price FROM products INNER JOIN cart_row ON cart_row.product_id=products.id WHERE cart_row.id = {cart_id}").fetchone()[0]
+        f"SELECT price FROM products INNER JOIN cart_row ON cart_row.product_id=products.id WHERE cart_row.id = {cart_row_id}").fetchone()[0]
     new_total = total - (amount * price)
     con.execute(f"""DELETE FROM cart_row WHERE cart_id={cart_id} and id={cart_row_id}""")
     con.execute(f"""UPDATE cart SET total = {new_total} WHERE total ={total} and id = {cart_id}""")
     con.commit()
-
 
 
 def delete_by_dish(user_id, product):
@@ -238,13 +237,19 @@ def add_order_rating(user_id, id_order, review=" ", mark=4):
     except:
         return f'неверно выставлено значение отметки рейтинга'
 
-
-
-
+# add_order_rating(463971847, 3, 'всё крута', 5)
 ####################################################
 "admin panel"
 
+
+def adm_get_ord():
+    """ получение списка всех активных заказов"""
+    orders = con.execute(f'SELECT * FROM orders WHERE status = 1').fetchall()
+    return orders
+
+
 def get_user_category(user_id):
+    """ получение категори пользователя 0-пользователь, 1,2 - администары разного уравня"""
     try:
         cat = con.execute(f"SELECT category FROM users WHERE tg_id = {user_id}").fetchone()[0]
         return cat
@@ -252,10 +257,32 @@ def get_user_category(user_id):
         return f'Данного пользователя не существует либо он пользуется vk-ботом'
 
 
+def adm_change_order_status(order_id):
+    """меняет статус заказа на доставленный"""
+    con.execute(f"UPDATE orders SET status = 0 WHERE status = 1 and id = {order_id} ")
+    con.commit()
 
 
-def change_user_category(user_id):
+def adm_change_to_first_rank(user_id):
+    """наделения правми админа 1го разряда"""
+    con.execute(f"UPDATE users SET category = 1 WHERE category = 0 or category = 2 and tg_id = {user_id} ")
+    con.commit()
+
+
+def adm_change_to_second_rank(user_id):
+    """наделения правми админа 2го разряда"""
+    con.execute(f"UPDATE users SET category = 2 WHERE category = 0 or category = 1 and tg_id = {user_id} ")
+    con.commit()
+
+def adm_get_rating_ord():
+    """ выдача списка отзывов, которые на рассмотрении"""
+    orders = con.execute(f'SELECT * FROM orders_rating WHERE status ="на рассмотрении"').fetchall()
+    return orders
+
+def adm_get_ord_rewiew(order_id):
+    """ выдача информации по отзыву"""
     pass
+
 
 
 # print(add_product_rating(1122, 'первый', 'Борщ', 4))
