@@ -3,7 +3,7 @@ import telebot
 from telebot import types
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from telebot.types import ReplyKeyboardMarkup, KeyboardButton
-from sql_main_things import get_user_category, adm_get_ord, adm_change_order_status
+from sql_main_things import get_user_category, adm_get_ord, adm_change_order_status, adm_get_rating_ord
 
 token = "6119423257:AAHaggUuah3WlSRlp2cuNz5R0PQYYX1w8rM"
 bot = telebot.TeleBot(token)
@@ -48,7 +48,6 @@ def start_admin_panel(message):
 def query_handler(call):
     flag = call.data[0:1]
     data = call.data[1:]
-    print(data)
     if flag == 'D':
         adm_change_order_status(data)
         bot.send_message(call.message.chat.id, 'status changed')
@@ -59,6 +58,17 @@ def query_handler(call):
             stat.add(InlineKeyboardButton(str(x4[1]), callback_data="D" + str(x4[0])))
         bot.send_message(call.message.chat.id, "Информация о заказе",
                          reply_markup=stat)
+    elif data == "Отзывы на заказы":
+        ord_review_menu = InlineKeyboardMarkup()
+        ord_review_list = adm_get_rating_ord()
+        for x5 in ord_review_list:
+            ord_review_menu.add(InlineKeyboardButton('№ '+str(x5[0]), callback_data='E'+str(x5[0])))
+        bot.send_message(call.message.chat.id, 'Список отзывов заказов, ожидающих расмотрения',
+                         reply_markup=ord_review_menu)
+    # elif flag == 'E':
+    #     bot.send_message(call.message.chat.id, )
+
+
 
 
 def check_admin_category(user_id):
