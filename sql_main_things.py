@@ -59,8 +59,13 @@ def add_delivery(user_id, list1):
     """Добавление адреса доставки и способа оплаты, нужен id пользователя и список["Адрес доставки", выбранный типом оплаты
     0-наличность 1-карта]"""
     id_user = con.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id}""").fetchone()[0]
-    con.execute('''INSERT INTO delivery (user_id, user_address, payment) VALUES (?, ?,  ?)''', (id_user, list1[0], list1[1]))
-    con.commit()
+    if con.execute(f"""SELECT user_address, payment FROM delivery WHERE user_id ={id_user}""").fetchone() is None:
+        con.execute('''INSERT INTO delivery (user_id, user_address, payment) VALUES (?, ?,  ?)''', (id_user, list1[0], list1[1]))
+        con.commit()
+    else:
+        con.execute(f"""UPDATE delivery SET user_address = '{list1[0]}' WHERE user_id = {id_user}""")
+        con.execute(f"""UPDATE delivery SET payment = {list1[1]} WHERE user_id = {id_user}""")
+        con.commit()
 
 
 def add_products_to_cart_row(user_id, product, amount):
