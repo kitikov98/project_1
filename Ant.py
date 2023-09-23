@@ -212,3 +212,24 @@ def handle_stop_list(user_id):
 
 if __name__ == "__main__":
     main()
+
+    # def send_dish_photo(user_id, photo_path):
+    #     try:
+    #         # zagruzka photo
+    #         photo = upload.photo_messages(photo_path)
+    #
+    #         owner_id = photo[0]['owner_id']
+    #         photo_id = photo[0]['id']
+    #         access_key = photo[0]['access_key']
+    #
+    #         attachment = f'photo{owner_id}_{photo_id}_{access_key}'
+    #
+    #         #otpravka
+    #         vk.messages.send(
+    #             user_id=user_id,
+    #             random_id=get_random_id(),
+    #             attachment=attachment
+    #         )
+    #     except Exception as e:
+    #         print(f"Ошибка при отправке фотографии: {e}")
+# kak to tak
