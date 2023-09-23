@@ -279,13 +279,13 @@ def adm_change_order_status(order_id):
 
 def adm_change_to_first_rank(user_id):
     """наделения правми админа 1го разряда"""
-    con.execute(f"UPDATE users SET category = 1 WHERE category = 0 or category = 2 and tg_id = {user_id} ")
+    con.execute(f"UPDATE users SET category = 1 WHERE (category = 0 or category = 2) and tg_id = {user_id} ")
     con.commit()
 
 
 def adm_change_to_second_rank(user_id):
     """наделения правми админа 2го разряда"""
-    con.execute(f"UPDATE users SET category = 2 WHERE category = 0 or category = 1 and tg_id = {user_id} ")
+    con.execute(f"UPDATE users SET category = 2 WHERE (category = 0 or category = 1 )and tg_id = {user_id} ")
     con.commit()
 
 
