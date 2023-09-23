@@ -232,4 +232,4 @@ if __name__ == "__main__":
     #         )
     #     except Exception as e:
     #         print(f"Ошибка при отправке фотографии: {e}")
-# kak to tak
+# kak to tak vot
