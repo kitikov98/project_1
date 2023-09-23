@@ -34,7 +34,7 @@ def get_products(category):
     category_id = con.execute(f'SELECT id FROM category WHERE name = "{category}"')
     category_id = category_id.fetchone()[0]
     list_prod = []
-    data = con.execute(f"""SELECT name FROM products WHERE category_id = {category_id}""")
+    data = con.execute(f"""SELECT name FROM products WHERE category_id = {category_id} and status = 1""")
     for x in data.fetchall():
         for y in x:
             list_prod.append(y)
@@ -288,10 +288,12 @@ def adm_change_to_second_rank(user_id):
     con.execute(f"UPDATE users SET category = 2 WHERE category = 0 or category = 1 and tg_id = {user_id} ")
     con.commit()
 
+
 def adm_get_rating_ord():
     """ выдача списка отзывов, которые на рассмотрении"""
     orders = con.execute(f'SELECT * FROM orders_rating WHERE status ="на рассмотрении"').fetchall()
     return orders
+
 
 def adm_get_ord_rewiew(order_id):
     """ выдача информации по отзыву"""
@@ -308,14 +310,53 @@ def adm_refuse_stat_ord(ord_rat_id):
     con.execute(f"UPDATE orders_rating SET status='отклонен' WHERE id ={ord_rat_id}")
     con.commit()
 
+
+def adm_get_rating_prod():
+    """ выдача списка отзывов, которые на рассмотрении"""
+    orders = con.execute(f'SELECT * FROM products_rating WHERE status ="на рассмотрении"').fetchall()
+    return orders
+
+
+def adm_get_prod_rewiew(order_id):
+    """ выдача информации по отзыву"""
+    review_mark = con.execute(f'SELECT rating, comment FROM products_rating WHERE id ={order_id}').fetchone()
+    return review_mark
+
+
+def adm_accept_stat_prod(ord_rat_id):
+    con.execute(f"UPDATE products_rating SET status='принят' WHERE id ={ord_rat_id}")
+    con.commit()
+
+
+def adm_refuse_stat_prod(ord_rat_id):
+    con.execute(f"UPDATE products_rating SET status='отклонен' WHERE id ={ord_rat_id}")
+    con.commit()
+
+
+def adm_get_products_status():
+    list_of_prod = con.execute(f'SELECT name, status FROM products').fetchall()
+    return list_of_prod
+
+
+def adm_stop_prod(product):
+    con.execute(f'UPDATE products SET status = 0 WHERE name ="{product}"')
+    con.commit()
+
+
+def adm_unstop_prod(product):
+    con.execute(f'UPDATE products SET status = 1 WHERE name ="{product}"')
+    con.commit()
+
+
+
 # add_user(None, 1122, 'Павлович Илья')
 # add_delivery(1122, ['Сурганова 37/3', 0])
 # print(add_product_rating(1122, 'первый', 'Борщ', 4))
 # add_order_rating(463971847,1,'всё нормуль', 5)
 # print(get_product_rating('Борщ'))
 # print(add_order_rating(1122, 'быстро доставили', 1))
-# print(add_product_rating(1122, 'отвратительный салат', 'Цезарь', 1))
-
+# print(add_product_rating(463971847, 'Цезарь', 'отвратительный салат', 1))
+# print(adm_get_products_status())
 # change_order(1122, 2)
 # add_to_order(1122)
 # add_user(1122, None, 'John')
