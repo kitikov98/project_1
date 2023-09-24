@@ -348,6 +348,13 @@ def adm_unstop_prod(product):
     con.commit()
 
 
+def adm_get_admins(tg_id):
+    admins = con.execute(f'SELECT tg_id, category FROM users WHERE tg_id !={tg_id} and (category = 1 or category = 2)').fetchall()
+    return admins
+
+def adm_decrease_adm_rank(tg_id):
+    con.execute(f'UPDATE users SET category = 0 WHERE tg_id = {tg_id}')
+    con.commit()
 
 # add_user(None, 1122, 'Павлович Илья')
 # add_delivery(1122, ['Сурганова 37/3', 0])
