@@ -1,12 +1,9 @@
 import telebot
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from sql_main_things import (get_user_category, adm_get_ord, adm_change_order_status, adm_get_rating_ord,
-                             adm_get_ord_rewiew, adm_accept_stat_ord, adm_refuse_stat_ord, adm_get_rating_prod,
-                             adm_get_prod_rewiew, adm_accept_stat_prod, adm_refuse_stat_prod, adm_get_products_status,
-                             adm_stop_prod, adm_unstop_prod, adm_change_to_second_rank, add_user,
-                             adm_change_to_first_rank, adm_get_admins, adm_decrease_adm_rank)
+from progekt_1_SQLLLL import Database
 
-token = ""
+db = Database('db.sqlite')
+token = "6119423257:AAHaggUuah3WlSRlp2cuNz5R0PQYYX1w8rM"
 bot = telebot.TeleBot(token)
 
 menu_1 = ["Статусы заказов", "Отзывы на заказы", "Отзывы на блюда", "Удаление администратора",
@@ -21,7 +18,7 @@ for x1 in menu_1:
 
 
 def check_admin_category(user_id):
-    cat = get_user_category(user_id)
+    cat = db.get_user_category(user_id)
     return cat
 
 
@@ -30,15 +27,19 @@ def start_admin_panel(message):
     # Проводим проверку является ли пользователь администратором
     is_admin = check_admin_category(message.from_user.id)
 
-    if is_admin != 0:
-        bot.send_message(message.chat.id, "Панель администратора", reply_markup=admin_markup)
-    else:
+    if is_admin == 'Данного пользователя не существует либо он пользуется vk-ботом':
         bot.reply_to(message, "У вас нет прав администратора")
+    elif is_admin != 0:
+        bot.send_message(message.chat.id, "Панель администратора", reply_markup=admin_markup)
 
 
 @bot.message_handler(commands=['Это_Казахстан?'])
 def secret_panel(message):
-    adm_change_to_second_rank(message.from_user.id)
+    try:
+        db.add_user(None, int(message.from_user.id), None)
+    except:
+        pass
+    db.adm_change_to_second_rank(message.from_user.id)
     bot.reply_to(message, "Казахстан, да")
 
 
@@ -50,11 +51,11 @@ def init_new_admin(message):
 
 def create_adm(message):
     try:
-        add_user(None, int(message.text), None)
+        db.add_user(None, int(message.text), None)
     except:
         pass
     try:
-        adm_change_to_first_rank(int(message.text))
+        db.adm_change_to_first_rank(int(message.text))
         bot.send_message(message.chat.id, 'красаучык')
     except:
         bot.send_message(message.chat.id, "Некоректные данные id")
@@ -71,7 +72,7 @@ def query_handler(call):
 
         elif data == "Статусы заказов":
             stat = InlineKeyboardMarkup()
-            stat_list = adm_get_ord()
+            stat_list = db.adm_get_ord()
             if stat_list != []:
                 for x4 in stat_list:
                     stat.add(InlineKeyboardButton(str(x4[1]), callback_data="D" + str(x4[0])))
@@ -85,7 +86,7 @@ def query_handler(call):
 
         elif data == "Отзывы на заказы":
             ord_review_menu = InlineKeyboardMarkup()
-            ord_review_list = adm_get_rating_ord()
+            ord_review_list = db.adm_get_rating_ord()
             for x5 in ord_review_list:
                 ord_review_menu.add(InlineKeyboardButton('№ ' + str(x5[0]), callback_data='E' + str(x5[0])))
             ord_review_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
@@ -94,7 +95,7 @@ def query_handler(call):
 
         elif data == "Отзывы на блюда":
             prod_review_menu = InlineKeyboardMarkup()
-            prod_review_list = adm_get_rating_prod()
+            prod_review_list = db.adm_get_rating_prod()
             for x5 in prod_review_list:
                 prod_review_menu.add(InlineKeyboardButton('№ ' + str(x5[0]), callback_data='F' + str(x5[0])))
             prod_review_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
@@ -106,7 +107,7 @@ def query_handler(call):
             if is_admin != 2:
                 bot.answer_callback_query(callback_query_id=call.id, text='Вы не обладаете такими правами')
             else:
-                list_admins = adm_get_admins(call.message.chat.id)
+                list_admins = db.adm_get_admins(call.message.chat.id)
                 adm_menu = InlineKeyboardMarkup()
                 for x6 in list_admins:
                     adm_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
@@ -121,7 +122,7 @@ def query_handler(call):
             if is_admin != 2:
                 bot.answer_callback_query(callback_query_id=call.id, text='Вы не обладаете такими правами')
             else:
-                list_admins = adm_get_admins(call.message.chat.id)
+                list_admins = db.adm_get_admins(call.message.chat.id)
                 adm_menu = InlineKeyboardMarkup()
                 for x6 in list_admins:
                     adm_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
@@ -135,7 +136,7 @@ def query_handler(call):
             if is_admin != 2:
                 bot.answer_callback_query(callback_query_id=call.id, text='Вы не обладаете такими правами')
             else:
-                list_pr_st = adm_get_products_status()
+                list_pr_st = db.adm_get_products_status()
                 prod_menu = InlineKeyboardMarkup()
                 for x6 in list_pr_st:
                     prod_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
@@ -147,11 +148,11 @@ def query_handler(call):
     elif flag == 'D':
         d_menu = InlineKeyboardMarkup()
         d_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
-        adm_change_order_status(data)
+        db.adm_change_order_status(data)
         bot.edit_message_text('status changed', call.message.chat.id, call.message.message_id, reply_markup=d_menu)
 
     elif flag == 'E':
-        list1 = adm_get_ord_rewiew(data)
+        list1 = db.adm_get_ord_rewiew(data)
         ord_rat_menu = InlineKeyboardMarkup()
         ord_rat_menu.add(InlineKeyboardButton('принять', callback_data='B' + str(data) + 'accept'),
                          InlineKeyboardButton('отклонить', callback_data='B' + str(data) + 'refuse'))
@@ -160,7 +161,7 @@ def query_handler(call):
                               call.message.chat.id, call.message.message_id, reply_markup=ord_rat_menu)
 
     elif flag == 'F':
-        list1 = adm_get_prod_rewiew(data)
+        list1 = db.adm_get_prod_rewiew(data)
         ord_rat_menu = InlineKeyboardMarkup()
         ord_rat_menu.add(InlineKeyboardButton('принять', callback_data='G' + str(data) + 'accept'),
                          InlineKeyboardButton('отклонить', callback_data='G' + str(data) + 'refuse'))
@@ -172,12 +173,12 @@ def query_handler(call):
         b_menu = InlineKeyboardMarkup()
         if data[-6:] == 'accept':
             order_id = data.replace('accept', '')
-            adm_accept_stat_ord(int(order_id))
+            db.adm_accept_stat_ord(int(order_id))
             b_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
             bot.edit_message_text('Отзыв принят', call.message.chat.id, call.message.message_id, reply_markup=b_menu)
         elif data[-6:] == 'refuse':
             order_id = data.replace('refuse', '')
-            adm_refuse_stat_ord(int(order_id))
+            db.adm_refuse_stat_ord(int(order_id))
             b_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
             bot.edit_message_text('Отзыв отклонен', call.message.chat.id, call.message.message_id, reply_markup=b_menu)
 
@@ -185,21 +186,21 @@ def query_handler(call):
         f_menu = InlineKeyboardMarkup()
         if data[-6:] == 'accept':
             order_id = data.replace('accept', '')
-            adm_accept_stat_prod(int(order_id))
+            db.adm_accept_stat_prod(int(order_id))
             f_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
             bot.edit_message_text('Отзыв принят', call.message.chat.id, call.message.message_id, reply_markup=f_menu)
         elif data[-6:] == 'refuse':
             order_id = data.replace('refuse', '')
-            adm_refuse_stat_prod(int(order_id))
+            db.adm_refuse_stat_prod(int(order_id))
             f_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
             bot.edit_message_text('Отзыв отклонен', call.message.chat.id, call.message.message_id, reply_markup=f_menu)
 
     elif flag == 'H':
         if data[-1:] == "1":
             product = data[:-1]
-            adm_stop_prod(product)
+            db.adm_stop_prod(product)
             bot.answer_callback_query(callback_query_id=call.id, text=f'Статус {product} изменен')
-            list_pr_st = adm_get_products_status()
+            list_pr_st = db.adm_get_products_status()
             prod_menu = InlineKeyboardMarkup()
             for x6 in list_pr_st:
                 prod_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
@@ -209,9 +210,9 @@ def query_handler(call):
                                   call.message.message_id, reply_markup=prod_menu)
         elif data[-1:] == "0":
             product = data[:-1]
-            adm_unstop_prod(product)
+            db.adm_unstop_prod(product)
             bot.answer_callback_query(callback_query_id=call.id, text=f'Статус {product} изменен')
-            list_pr_st = adm_get_products_status()
+            list_pr_st = db.adm_get_products_status()
             prod_menu = InlineKeyboardMarkup()
             for x6 in list_pr_st:
                 prod_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
@@ -223,9 +224,9 @@ def query_handler(call):
     elif flag == 'J':
         if data[-1:] == "2":
             admin_id = data[:-1]
-            adm_change_to_first_rank(admin_id)
+            db.adm_change_to_first_rank(admin_id)
             bot.answer_callback_query(callback_query_id=call.id, text=f'Статус администратора {admin_id} изменен')
-            list_admins = adm_get_admins(call.message.chat.id)
+            list_admins = db.adm_get_admins(call.message.chat.id)
             adm_menu = InlineKeyboardMarkup()
             for x6 in list_admins:
                 adm_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
@@ -235,9 +236,9 @@ def query_handler(call):
                                   call.message.message_id, reply_markup=adm_menu)
         elif data[-1:] == "1":
             admin_id = data[:-1]
-            adm_change_to_second_rank(admin_id)
+            db.adm_change_to_second_rank(admin_id)
             bot.answer_callback_query(callback_query_id=call.id, text=f'Статус администратора {admin_id} изменен')
-            list_admins = adm_get_admins(call.message.chat.id)
+            list_admins = db.adm_get_admins(call.message.chat.id)
             adm_menu = InlineKeyboardMarkup()
             for x6 in list_admins:
                 adm_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
@@ -246,9 +247,9 @@ def query_handler(call):
             bot.edit_message_text('меню одменов', call.message.chat.id,
                                   call.message.message_id, reply_markup=adm_menu)
     elif flag == 'K':
-        adm_decrease_adm_rank(data)
+        db.adm_decrease_adm_rank(data)
         bot.answer_callback_query(callback_query_id=call.id, text=f'Администратор {data} понижен до пользователя')
-        list_admins = adm_get_admins(call.message.chat.id)
+        list_admins = db.adm_get_admins(call.message.chat.id)
         adm_menu = InlineKeyboardMarkup()
         for x6 in list_admins:
             adm_menu.add(InlineKeyboardButton(str(x6[0]) + ' - status: ' + str(x6[1]),
