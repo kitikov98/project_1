@@ -9,11 +9,14 @@ import json
 from dotenv import load_dotenv
 import os
 from os.path import join, dirname
-from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line
-from sql_main_things import get_cart_row, get_description_dish, add_to_order, delete_by_dish, get_orders,  change_order
-from sql_main_things import cancel_order, add_product_rating, get_product_rating, get_orders_rating, add_order_rating, add_delivery
+# from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line
+# from sql_main_things import get_cart_row, get_description_dish, add_to_order, delete_by_dish, get_orders,  change_order
+# from sql_main_things import cancel_order, add_product_rating, get_product_rating, get_orders_rating, add_order_rating, add_delivery
+from progekt_1_SQLLLL import Database
 #import gspread
 #from google_dict_stat import stat_user, stat_cat, stat_shop, dict1, new_dict2, dict2
+
+db = Database('db.sqlite')
 
 
 def get_from_env(key):
@@ -44,7 +47,7 @@ number_order = ""
 user_id = ''
 markupI_start = InlineKeyboardMarkup()
 #получаю категории из БД
-categories = get_category()
+categories = db.get_category()
 #клавиатура категорий по данным из БД
 markupI_cat = InlineKeyboardMarkup()
 for x in categories:
@@ -117,7 +120,7 @@ def start(message):
         print(f"user_id {user_id}")
         #заберет и имя, и фамилию
         try:
-            add_user(None, message.from_user.id, message.from_user.first_name + ' ' + message.from_user.last_name)
+            db.add_user(None, message.from_user.id, message.from_user.first_name + ' ' + message.from_user.last_name)
         except:
             pass
         bot.send_message(message.chat.id, "Введите адрес доставки и нажмите Enter:")
@@ -130,26 +133,20 @@ def start(message):
         print(f"Летит адрес {message.text}")
         lst_address_payment[0] = message.text
         bot.send_message(message.chat.id, "Адрес записан!")
-        add_delivery(user_id, lst_address_payment)
+        db.add_delivery(user_id, lst_address_payment)
     # обработка номера заказа для удаления или редактирования
     elif type(message.text) == int:
         number_order = message.text
         bot.send_message(message.chat.id, f"Что желаете сделать с заказом № {number_order}?", reply_markup=markupI_order)
-    # обработка отзыва
+    #обработка номера заказа для удаления или редактирования
+    elif  type(message.text) == int:
+        number_order = message.text
+        bot.send_message(message.chat.id, f"Что желаете сделать № {number_order}?", reply_markup=markupI_order )
+    # #обработка ввода отзыва
     else:
         review_ = message.text
         print(f"review_ {review_}")
-    #!!!!не забыть переделать адрес и способ оплаты при старте, внизу рабочий варинат по кнопке
-    # #обработка номера заказа для удаления или редактирования
-    # elif  type(message.text) == int:
-    #     number_order = message.text
-    #     bot.send_message(message.chat.id, f"Что желаете сделать № {number_order}?", reply_markup=markupI_order )
-    # #обработка ввода адреса
-    # else:
-    #     address = message.text
-    #     print(f"address {address}")
-
-    print(f"get_orders after start {get_orders(user_id)}")
+    print(f"get_orders after start {db.get_orders(user_id)}")
 
 
 @bot.callback_query_handler(func=lambda call: True)
@@ -170,13 +167,13 @@ def query_handler(call):
     # flag = call.data[0]
     # data = call.data[1:]
     # print(flag, data)
-    cart_total = get_cart_row(user_id)
+    cart_total = db.get_cart_row(user_id)
     print(f"cart_total {cart_total}")
     cart_ = cart_total[0]
     total_ = cart_total[1]
     print(f"cart_ {cart_}")
     print(f"total_ {total_}")
-    print(f"get_orders in 2 decorator {get_orders(user_id)}")
+    print(f"get_orders in 2 decorator {db.get_orders(user_id)}")
     print(f"")
     print(f"data {data}")
     # удаление всех кнопок клавиатуры
@@ -196,25 +193,27 @@ def query_handler(call):
         elif data =="Заказы":
             #получу все заказы со статусом 1(доступные для редактирования), статус 0 зазакам дает административка
             #print(f"get_orders in orders {get_orders(user_id)}")
-            lst_orders = get_orders(user_id)
+            lst_orders = db.get_orders(user_id)
             print("in orders")
             print(f"lst_order {lst_orders}")
-            info_orders = "Заказ оформлен!\n" + "Информация о заказах(№ заказа, адрес, ожидаемое время)\n"
+            info_orders = "Информация о заказах(№ заказа, ожидаемое время)\n"
             for item in lst_orders:
                 #None формируется после отмены заказа
                 if item == None:
                     continue
                 else:
-                    info_orders += str(item[0]) + ". " + str(item[1]) + ". " + str(item[2][11:]) + '\n'
-                    #info_orders +=  str(item[0]) + "                  " + str(item[1]) + "  " + str(item[2][11:]) + '\n'
+                    info_orders += str(item[0]) + ". " + str(item[1]) + '\n'
             # print(f"change_order {change_order(user_id, 3)}")
             # print(f"change_order {change_order(user_id, 4)}")
             bot.send_message(call.message.chat.id, info_orders)
+            bot.send_message(call.message.chat.id, "При необходимости редактировать заказ введите номер заказа и Enter")
+
+
         elif data == "Назад в главное меню":
             bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
     elif flag == '2':
         if data in categories:
-            lst_dishes = get_products(data)
+            lst_dishes = db.get_products(data)
             #формирую клавиатуры блюд для заказа
             for dish_ in lst_dishes:
                 markupI_cat_val.add(InlineKeyboardButton(dish_, callback_data='3' + dish_))
@@ -228,7 +227,7 @@ def query_handler(call):
     if flag == '3':
         if data in lst_dishes:
             temp_dish = data
-            desc = get_description_dish(data)[0]
+            desc = db.get_description_dish(data)[0]
             desc_str = desc[0] + ": " + desc[1] + '. ' + "Стоимость: " + str(desc[2]) + '. ' + "Время: " + desc[3]
             bot.send_photo(call.message.chat.id, photo=get_description_dish(data)[1])
             bot.send_message(call.message.chat.id, desc_str, reply_markup=markupI_add_card)
@@ -238,7 +237,7 @@ def query_handler(call):
         elif data == "Добавить в корзину":
             # #??уточнить еще раз про amount, 2 клавы появляются тектовая с инфо, что в корзине, и с флагом 5 Управление корзиной...
             print(f"Блюдо летит в добавить в корзину {temp_dish}")
-            add_products_to_cart_row(user_id, temp_dish, 1)
+            db.add_products_to_cart_row(user_id, temp_dish, 1)
             bot.send_message(call.message.chat.id, "Блюдо добавлено в корзину!")
 
     #флаг 5-клава управления корзиной...
@@ -260,7 +259,7 @@ def query_handler(call):
         elif data == "Изменить способ оплаты":
             bot.send_message(call.message.chat.id, "Выберите способ оплаты", reply_markup=markupI_payment)
         elif data == "Оформить заказ":
-            add_to_order(user_id)
+            db.add_to_order(user_id)
             bot.send_message(call.message.chat.id, "Заказ оформлен!")
             # lst_address_payment = []
             # lst_address_payment.append(address)
@@ -280,7 +279,7 @@ def query_handler(call):
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         #нажали на блюдо - сработала функция удаления записи в cart_row
         else:
-            delete_by_dish(user_id, data)
+            db.delete_by_dish(user_id, data)
             bot.send_message(call.message.chat.id, f"Блюдо {data} удалено из корзины!")
     # elif flag == "7":
     #     if data == "Назад в главное меню":
@@ -295,7 +294,7 @@ def query_handler(call):
             elif len(lst_address_payment) == 2:
                 lst_address_payment[1] = payment
             print(f"lst_address_payment {lst_address_payment}")
-            add_delivery(user_id, lst_address_payment)
+            db.add_delivery(user_id, lst_address_payment)
             bot.send_message(call.message.chat.id, "Вы выбрали способ оплаты картой!")
             bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
         elif data == "Наличность":
@@ -305,21 +304,21 @@ def query_handler(call):
             elif len(lst_address_payment) == 2:
                 lst_address_payment[1] = payment
             print(f"lst_address_payment {lst_address_payment}")
-            add_delivery(user_id, lst_address_payment)
+            db.add_delivery(user_id, lst_address_payment)
             bot.send_message(call.message.chat.id, "Вы выбрали способ оплаты наличными!")
             bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
     elif flag == "9":
         if data == "Меню категорий блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
         elif data == "Изменить заказ":
-            change_order(user_id, number_order)
+            db.change_order(user_id, number_order)
             bot.send_message(call.message.chat.id, f"Можете редактировать заказ {number_order}!")
         elif data == "Отменить заказ":
-            cancel_order(number_order)
+            db.cancel_order(number_order)
             bot.send_message(call.message.chat.id, "Заказ отменен!")
     elif flag == '10':
         if data in categories:
-            lst_dishes = get_products(data)
+            lst_dishes = db.get_products(data)
             #формирую клавиатуры блюд для статистики
             for dish_ in lst_dishes:
                 print(f"dish_{dish_}")
@@ -333,12 +332,11 @@ def query_handler(call):
     #???средний рейтинг проверить как посчитается
     elif flag == '11':
         print(f"Блюдо летит для рейтинга {data}")
-        average_rating = get_product_rating(data)
+        average_rating = db.get_product_rating(data)
         print(f"average_rating {average_rating}")
         bot.send_message(call.message.chat.id, average_rating ,
                          reply_markup=markupI_rating)
         #print(add_product_rating(user_id, data, review="Отличное блюдо", mark=4))
-
         # bot.send_message(call.message.chat.id, "Блюдо добавлено в корзину!")
 
 
