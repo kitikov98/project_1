@@ -284,15 +284,14 @@ class Database:
         return order
 
 
-    def add_order_rating(self, user_id, review=" ", mark=4):
+    def add_order_rating(self, user_id, order_id, review=" ", mark=4):
         """для выставления рейтинга нужны id заказ, отметка и отзыв, id пользователя """
         id_user = self.cursor.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
         status = 'на рассмотрении'
-        id_order = self.get_to_rat_ord(user_id)
         try:
             self.cursor.execute(
                 f"""INSERT INTO orders_rating (user_id, order_id, rating, comment, status) VALUES (?, ?, ?, ?, ?)""",
-                (id_user, id_order, mark, review, status))
+                (id_user, order_id, mark, review, status))
             self.connection.commit()
             return f'спасибо, ваш отзыв принят'
         except:
