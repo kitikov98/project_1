@@ -29,6 +29,8 @@ def start_admin_panel(message):
 
     if is_admin == 'Данного пользователя не существует либо он пользуется vk-ботом':
         bot.reply_to(message, "У вас нет прав администратора")
+    elif is_admin == 0:
+        bot.reply_to(message, "У вас нет прав администратора")
     elif is_admin != 0:
         bot.send_message(message.chat.id, "Панель администратора", reply_markup=admin_markup)
 

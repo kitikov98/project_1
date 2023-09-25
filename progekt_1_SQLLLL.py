@@ -277,10 +277,18 @@ class Database:
             average_rating = sum(rating_list) / len(rating_list)
             return average_rating, rating_texts
 
-    def add_order_rating(self, user_id, id_order, review=" ", mark=4):
+    def get_to_rat_ord(self, user_id):
+        id_user = self.cursor.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
+        deliv_id = self.cursor.execute(f'SELECT id FROM delivery WHERE user_id = {id_user}').fetchone()[0]
+        order_id = self.cursor.execute(f'SELECT id FROM orders WHERE status = 0 and delivery_id = {deliv_id}').fetchall()
+        return order_id
+
+
+    def add_order_rating(self, user_id, review=" ", mark=4):
         """для выставления рейтинга нужны id заказ, отметка и отзыв, id пользователя """
         id_user = self.cursor.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
         status = 'на рассмотрении'
+        id_order = self.get_to_rat_ord(user_id)
         try:
             self.cursor.execute(
                 f"""INSERT INTO orders_rating (user_id, order_id, rating, comment, status) VALUES (?, ?, ?, ?, ?)""",
