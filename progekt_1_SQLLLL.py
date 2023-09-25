@@ -280,8 +280,8 @@ class Database:
     def get_to_rat_ord(self, user_id):
         id_user = self.cursor.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
         deliv_id = self.cursor.execute(f'SELECT id FROM delivery WHERE user_id = {id_user}').fetchone()[0]
-        order_id = self.cursor.execute(f'SELECT id FROM orders WHERE status = 0 and delivery_id = {deliv_id}').fetchall()
-        return order_id
+        order = self.cursor.execute(f'SELECT id, date_delivery FROM orders WHERE status = 0 and delivery_id = {deliv_id}').fetchall()
+        return order
 
 
     def add_order_rating(self, user_id, review=" ", mark=4):
