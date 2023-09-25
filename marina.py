@@ -66,10 +66,11 @@ lst_start = ["Меню категорий блюд", "Корзина", "Стат
 for y in lst_start:
     markupI_start.add(InlineKeyboardButton(y, callback_data='1'+y))
 #клавиатура по кнопке корзина для дальнейшего управления,
-lst_for_cart = ["Удаление из корзины", "Изменить адрес доставки", "Изменить способ оплаты", "Оформить заказ", "Назад в главное меню"]
+lst_for_cart = ["Удаление из корзины", "Изменить адрес доставки", "Изменить способ оплаты", "Оформить заказ"]
 markupI_management_cart = InlineKeyboardMarkup()
 for x in lst_for_cart:
     markupI_management_cart.add(InlineKeyboardButton(x, callback_data='5'+x))
+markupI_management_cart.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
 #клавиатура по кнопке удаление из корзины для удаления блюд
 markupI_delete_cart = InlineKeyboardMarkup()
 address = ""
@@ -92,7 +93,7 @@ for x in lst_order:
 #для отзыва и оценки
 review_ = ''
 mark_ = ''
-#флаг для отзыва, если True, значит летит отзыв
+#флаг для отзыва, если True, значит летит отзыв на блюдо
 flag_review = False
 #клавиатура категорий для статистики по данным из БД
 markupI_stat_cat = InlineKeyboardMarkup()
@@ -103,6 +104,7 @@ markupI_stat_cat.add(InlineKeyboardButton("Назад в главное меню
 markupI_stat_dish = InlineKeyboardMarkup([])# флаг 11
 #для сохранения адреса и способа оплаты сразу при вводе пользовтеля
 #new_lst_address_payment = []
+#использую для рейтинга блюд
 markupI_rating = InlineKeyboardMarkup()
 markupI_rating.add(InlineKeyboardButton("Выставить рейтинг", callback_data='12'+"Выставить рейтинг"))
 markupI_rating.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
@@ -113,17 +115,39 @@ for x in lst_digits:
     markupI_digits.add(InlineKeyboardButton(x, callback_data='13'+x))
 markupI_digits.add(InlineKeyboardButton("Отзыв", callback_data='13'+"Отзыв"))
 markupI_digits.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
-
-#клава для отзыва
+#клава для отзыва по блюду
 markupI_review = InlineKeyboardMarkup()
 markupI_review.add(InlineKeyboardButton("Отправить отзыв", callback_data='14'+"Отправить отзыв"))
 markupI_review.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
-
+#использую для рейтинга заказов
+markupI_rating_order = InlineKeyboardMarkup()
+markupI_rating_order.add(InlineKeyboardButton("Выставить рейтинг", callback_data='15'+"Выставить рейтинг"))
+markupI_rating_order.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
+#для вывода заказов по номерам и времени, флаг 16
+markupI_stat_order = InlineKeyboardMarkup()
+id_order_stat = ''
+#для различия отзыва по блюду и отзыва по заказу
+flag_review_order = False
+mark_order = ""
+review_order = ''
+#если True - летит отзыв на заказ
+flag_review_order = False
+#клава для выставления оценки заказу
+markupI_mark_order = InlineKeyboardMarkup()
+for x in lst_digits:
+    markupI_mark_order.add(InlineKeyboardButton(x, callback_data='17'+x))
+markupI_mark_order.add(InlineKeyboardButton("Отзыв", callback_data='17'+"Отзыв"))
+markupI_mark_order.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
+#клава для отзыва по заказу
+markupI_review_order = InlineKeyboardMarkup()
+markupI_review_order.add(InlineKeyboardButton("Отправить отзыв", callback_data='18'+"Отправить отзыв"))
+markupI_review_order.add(InlineKeyboardButton("Назад в главное меню", callback_data='1'+"Назад в главное меню"))
 
 
 @bot.message_handler(content_types=['text'])
 def start(message):
-    global user_id, address, number_order, new_lst_address_payment, flag_review, review_, mark_
+    global user_id, address, number_order, new_lst_address_payment, flag_review, review_, mark_, mark_order, review_order
+    global flag_review_order, id_order_stat, flag_review_order
     try:
         message.text = int(message.text)
     except:
@@ -146,29 +170,33 @@ def start(message):
         number_order = message.text
         bot.send_message(message.chat.id, f"Что желаете сделать с заказом № {number_order}?",
                          reply_markup=markupI_order)
-    elif len(lst_address_payment) == 0 and flag_review == False:
+    elif len(lst_address_payment) == 0 and flag_review == False and flag_review_order == False:
         print(f"Летит адрес {message.text}")
         lst_address_payment.append(message.text)
         bot.send_message(message.chat.id, "Адрес записан!")
         bot.send_message(message.chat.id, "Выберите способ оплаты:", reply_markup=markupI_payment)
         # обработка номера заказа для удаления или редактирования
-    elif len(lst_address_payment) == 2 and flag_review == False:
+    elif len(lst_address_payment) == 2 and flag_review == False and flag_review_order == False:
         print(f"Летит адрес {message.text}")
         lst_address_payment[0] = message.text
         bot.send_message(message.chat.id, "Адрес записан!")
         db.add_delivery(user_id, lst_address_payment)
     #обработка ввода отзыва
-    elif flag_review == True:
+    elif flag_review == True and flag_review_order == False:
         review_ = message.text
         print(f"review_ {review_}")
-        bot.send_message(message.chat.id, "Отзыв сохранен! Можете его отправить!")
-    #print(f"get_orders after start {db.get_orders(user_id)}")
+        bot.send_message(message.chat.id, "Отзыв по блюду сохранен! Можете его отправить!")
+    elif flag_review_order == True:
+        review_order = message.text
+        print(f"review_order {review_order}")
+        bot.send_message(message.chat.id, "Отзыв по заказу сохранен! Можете его отправить!")
 
 
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
-    global user_id, lst_dishes, temp_dish, lst_dish_cart, dish_for_delete, dict_del_dish, dish_for_stat
+    global user_id, lst_dishes, temp_dish, lst_dish_cart, dish_for_delete, dict_del_dish, dish_for_stat, mark_order, review_order
     global address, lst_address_payment, address, payment, number_order, review_, mark_, new_lst_address_payment, flag_review
+    global flag_review_order, id_order_stat, flag_review_order
     bot.answer_callback_query(callback_query_id=call.id, )
     # print(call)
     id = call.message.chat.id
@@ -200,11 +228,12 @@ def query_handler(call):
                 desc_cart += '*' + str(item[1]) + ' ' + str(item[2]) + " шт." + '\n'
             bot.send_message(call.message.chat.id, desc_cart + "Стоимость: " + str(total_), reply_markup=markupI_management_cart)
         elif data == "Статистика заказов":
-            pass
+            average_rating=db.get_orders_rating()
+            bot.send_message(call.message.chat.id, average_rating, reply_markup=markupI_rating_order)
         elif data =="Статистика блюд":
             bot.send_message(call.message.chat.id, "Выберите категорию блюда для рейтинга", reply_markup=markupI_stat_cat)
         elif data =="Заказы":
-            #получу все заказы со статусом 1(доступные для редактирования), статус 0 зазакам дает административка
+            #получу все заказы со статусом 1(доступные для редактирования), статус 0 заказам дает администратор
             #print(f"get_orders in orders {get_orders(user_id)}")
             lst_orders = db.get_orders(user_id)
             print("in orders")
@@ -250,12 +279,11 @@ def query_handler(call):
             print(f"Блюдо летит в добавить в корзину {temp_dish}")
             db.add_products_to_cart_row(user_id, temp_dish, 1)
             bot.send_message(call.message.chat.id, "Блюдо добавлено в корзину!")
-
     #флаг 5-клава управления корзиной...
     elif flag == "5":
-        if data == "Назад в главное меню":
-            bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
-        elif data == "Удаление из корзины":
+        # if data == "Назад в главное меню":
+        #     bot.send_message(call.message.chat.id, "Выберите категорию блюд", reply_markup=markupI_cat)
+        if data == "Удаление из корзины":
             markupI_delete_cart.keyboard.clear()
             for x in cart_:
                 print(x[1])
@@ -323,8 +351,6 @@ def query_handler(call):
             for dish_ in lst_dishes:
                 print(f"dish_{dish_}")
                 markupI_stat_dish.add(InlineKeyboardButton(dish_, callback_data='11' + dish_))
-            # markupI_stat_dishl.add(
-            #     InlineKeyboardButton("Назад в меню категорий блюд", callback_data='1' + "Меню категорий блюд"))
             markupI_stat_dish.add(
                 InlineKeyboardButton("Назад в главное меню", callback_data='1' + "Назад в главное меню"))
             bot.send_message(call.message.chat.id, "Выберите блюдо для рейтинга!",
@@ -356,6 +382,45 @@ def query_handler(call):
             else:
                 db.add_product_rating(user_id, dish_for_stat, review_, mark_)
                 bot.send_message(call.message.chat.id, "Отзыв отправлен!")
+    elif flag == "15":
+        if data == "Выставить рейтинг":
+            orders_ = db.get_orders(user_id)
+            #[(1, '2023-09-24 18:42:45.884752', 1, 1, 1), None, (2, '2023-09-25 00:21:56.919514', 1, 3, 1)
+            print(f"orders_ {orders_}")
+            for item in orders_:
+                if item == None:
+                    continue
+                else:
+                    markupI_stat_order.add(InlineKeyboardButton(str(item[0]) + ' ' + item[1], callback_data='16' + str(item[0])))
+            markupI_stat_order.add(
+                InlineKeyboardButton("Назад в главное меню", callback_data='1' + "Назад в главное меню"))
+            bot.send_message(call.message.chat.id, "Выберите заказ для рейтинга!", reply_markup=markupI_stat_order)
+    elif flag == "16":
+        flag_id_order_stat = True
+        id_order_stat = data
+        print(f"Летит номер заказа для peйтинга = {data}")
+        bot.send_message(call.message.chat.id, f"Выберите рейтинг по заказу {data}\n и для написания отзыва выбирайте кнопку 'Отзыв'!", reply_markup=markupI_mark_order)
+    elif flag == "17":
+        print(f"Летит рейтинг заказа = {data}")
+        if mark_order == '':
+            mark_order = data
+        print(f"data in 17 {data}")
+        #bot.send_message(call.message.chat.id, f"Ваш рейтинг принят \n Для написания отзыва нажмите на кнопку 'Отзыв'!")
+        if data == "Отзыв":
+            flag_review_order  = True
+            bot.send_message(call.message.chat.id, "Напишите отзыв в чате и введите Enter!", reply_markup=markupI_review_order)
+    elif flag == "18":
+        if data == "Отправить отзыв":
+            if review_order == "" or mark_order == "":
+                bot.send_message(call.message.chat.id, "Вам необходимо заполнить отзыв и выставить рейтинг!")
+            else:
+                print(f"Отправляется отзыв по заказу data = {data}")
+                print(f'user_id {user_id}')
+                print(f'id_order_stat {id_order_stat}')
+                print(f'review_order {review_order}')
+                print(f'mark_order {mark_order}')
+                db.add_order_rating(user_id, id_order_stat, review_order, mark_order)
+                bot.send_message(call.message.chat.id, "Отзыв по заказу отправлен!")
 
 
 print("Ready")
