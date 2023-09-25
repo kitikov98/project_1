@@ -77,7 +77,7 @@ def query_handler(call):
             stat_list = db.adm_get_ord()
             if stat_list != []:
                 for x4 in stat_list:
-                    stat.add(InlineKeyboardButton(str(x4[1]), callback_data="D" + str(x4[0])))
+                    stat.add(InlineKeyboardButton(str(x4[0])+'. '+str(x4[1]), callback_data="D" + str(x4[0])))
                 stat.add(InlineKeyboardButton('back', callback_data='Aback'))
                 bot.edit_message_text("Информация о заказе", call.message.chat.id,
                                       call.message.message_id, reply_markup=stat)
