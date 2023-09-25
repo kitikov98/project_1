@@ -9,12 +9,7 @@ import json
 from dotenv import load_dotenv
 import os
 from os.path import join, dirname
-# from sql_main_things import get_category, get_products, add_user, add_products_to_cart_row, del_cart_line
-# from sql_main_things import get_cart_row, get_description_dish, add_to_order, delete_by_dish, get_orders,  change_order
-# from sql_main_things import cancel_order, add_product_rating, get_product_rating, get_orders_rating, add_order_rating, add_delivery
 from progekt_1_SQLLLL import Database
-#import gspread
-#from google_dict_stat import stat_user, stat_cat, stat_shop, dict1, new_dict2, dict2
 
 db = Database('db.sqlite')
 
@@ -309,11 +304,6 @@ def query_handler(call):
         else:
             db.delete_by_dish(user_id, data)
             bot.send_message(call.message.chat.id, f"Блюдо {data} удалено из корзины!")
-    # elif flag == "7":
-    #     if data == "Назад в главное меню":
-    #         bot.send_message(call.message.chat.id, "Выбирайте:", reply_markup=markupI_start)
-    #     else:# кнопка применить заказ
-    #         bot.send_message(call.message.chat.id, "Адрес записан!")
     elif flag == "8":
         if data == "Карта":
             payment = "1"
@@ -384,9 +374,12 @@ def query_handler(call):
                 bot.send_message(call.message.chat.id, "Отзыв отправлен!")
     elif flag == "15":
         if data == "Выставить рейтинг":
-            orders_ = db.get_orders(user_id)
-            #[(1, '2023-09-24 18:42:45.884752', 1, 1, 1), None, (2, '2023-09-25 00:21:56.919514', 1, 3, 1)
+            #!!!выстраиваются заказы со статусом 1, после админки протестировать функцию со статусом 0
+            #orders_ = db.get_orders(user_id)
+            #c закрытыми заказами
+            orders_ = db.get_to_rat_ord(user_id)
             print(f"orders_ {orders_}")
+            markupI_stat_order.keyboard.clear()
             for item in orders_:
                 if item == None:
                     continue
