@@ -22,7 +22,7 @@ class Database:
         tg_id INTEGER UNIQUE, name TEXT, category TINYINT DEFAULT 0 CHECK(category >=0 AND category <= 2))''')
 
         self.cursor.execute('''CREATE TABLE IF NOT EXISTS orders (id INTEGER PRIMARY KEY, 
-        date_delivery DATETIME, status BOOL, cart_id INTEGER, delivery_id INTEGER,
+        date_delivery DATETIME, status BOOL, cart_id INTEGER, delivery_id INTEGER, rating_mark BOOL,
         FOREIGN KEY (cart_id) REFERENCES cart(id)ON DELETE RESTRICT ON UPDATE CASCADE, 
         FOREIGN KEY (delivery_id) REFERENCES delivery(id)ON DELETE RESTRICT ON UPDATE CASCADE)  ''')
 
@@ -199,8 +199,8 @@ class Database:
         max_time_to_cook = timedelta(minutes=datetime.strptime(max_time_to_cook, "%M:%S").minute)
         time_to_cook = now + max_time_to_cook + timedelta(minutes=30)
         self.cursor.execute(
-            f"""INSERT INTO orders (date_delivery, status, cart_id, delivery_id) VALUES (?, ?, ?, ?)""",
-            (time_to_cook, status, cart_id, delivery_id))
+            f"""INSERT INTO orders (date_delivery, status, cart_id, delivery_id, rating_mark) VALUES (?, ?, ?, ?, ?)""",
+            (time_to_cook, status, cart_id, delivery_id, 1))
         self.cursor.execute(f"""UPDATE cart_row SET status_in_order = 0 WHERE status_in_order = 1 and cart_id = {cart_id}""")
         self.cursor.execute(f"""UPDATE cart SET cart_status = 0 WHERE cart_status = 1 and id = {cart_id}""")
         # ↑ изменение статуса продукта с "в корзине", на "в заказе"
@@ -240,8 +240,8 @@ class Database:
         status = 'на рассмотрении'
         try:
             self.cursor.execute(
-                f"""INSERT INTO products_rating (user_id, product_id, rating, comment, status) VALUES (?, ?, ?, ?, ?)""",
-                (id_user, product_id, mark, review, status))
+                f"""INSERT INTO products_rating (user_id, product_id, rating, comment, status) 
+                VALUES (?, ?, ?, ?, ?)""", (id_user, product_id, mark, review, status))
             self.connection.commit()
             return f'спасибо, ваш отзыв принят'
         except:
@@ -280,9 +280,9 @@ class Database:
     def get_to_rat_ord(self, user_id):
         id_user = self.cursor.execute(f"""SELECT id FROM users WHERE vk_id ={user_id} or tg_id={user_id} """).fetchone()[0]
         deliv_id = self.cursor.execute(f'SELECT id FROM delivery WHERE user_id = {id_user}').fetchone()[0]
-        order = self.cursor.execute(f'SELECT id, date_delivery FROM orders WHERE status = 0 and delivery_id = {deliv_id}').fetchall()
+        order = self.cursor.execute(f"""SELECT id, date_delivery FROM orders 
+        WHERE rating_mark = 1 and status = 0 and delivery_id = {deliv_id}""").fetchall()
         return order
-
 
     def add_order_rating(self, user_id, order_id, review=" ", mark=4):
         """для выставления рейтинга нужны id заказ, отметка и отзыв, id пользователя """
@@ -292,6 +292,7 @@ class Database:
             self.cursor.execute(
                 f"""INSERT INTO orders_rating (user_id, order_id, rating, comment, status) VALUES (?, ?, ?, ?, ?)""",
                 (id_user, order_id, mark, review, status))
+            self.cursor.execute(f"""UPDATE orders SET rating_mark = 0 WHERE id = {order_id}""")
             self.connection.commit()
             return f'спасибо, ваш отзыв принят'
         except:
