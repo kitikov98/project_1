@@ -10,6 +10,9 @@ def convert_to_pic(str1):
     pillow = Image.open(image)
     return pillow
 
+def convert_to_pic_b(str1):
+    image = BytesIO(b64decode(str1))
+    return image
 
 class Database:
     def __init__(self, db_name):
@@ -184,7 +187,8 @@ class Database:
         product_desc = self.cursor.execute(
             f'SELECT name, description, price, time_to_cook FROM products WHERE name ="{str1}"').fetchone()
         pic = convert_to_pic(self.cursor.execute(f'SELECT pictures FROM products WHERE name ="{str1}"').fetchone()[0])
-        return product_desc, pic
+        pic2 = convert_to_pic_b(self.cursor.execute(f'SELECT pictures FROM products WHERE name ="{str1}"').fetchone()[0])
+        return product_desc, pic, pic2
 
     def add_to_order(self, user_id):
         """ для добавления заказа в БД нужно id пользователя  """
