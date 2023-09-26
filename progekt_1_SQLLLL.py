@@ -94,6 +94,10 @@ class Database:
                 list_prod.append(y)
         return list_prod
 
+    def list_products(self):
+        list_prod = self.cursor.execute(f'SELECT name FROM products').fetchall()
+        return list_prod
+
     def add_user(self, vk_id, tg_id, name):
         """ для добавления пользователя в список пользователей. используйте None вместо переменной, в которую вам не надо
         записывать  Пример add_user(None, 1333, 'Giordani Jovanovic')"""
