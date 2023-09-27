@@ -4,6 +4,7 @@ from progekt_1_SQLLLL import Database
 
 db = Database('db.sqlite')
 token = "6119423257:AAHaggUuah3WlSRlp2cuNz5R0PQYYX1w8rM"
+
 bot = telebot.TeleBot(token)
 
 menu_1 = ["Статусы заказов", "Отзывы на заказы", "Отзывы на блюда", "Удаление администратора",
