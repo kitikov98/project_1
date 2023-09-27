@@ -1,9 +1,15 @@
 import telebot
+import json
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from progekt_1_SQLLLL import Database
 
+text = ''
+with open('data.json', 'r', encoding='utf-8') as f: #открыли файл с данными
+    text = json.load(f)
+
 db = Database('db.sqlite')
-token = "6119423257:AAHaggUuah3WlSRlp2cuNz5R0PQYYX1w8rM"
+
+token = text['tg_token']
 
 bot = telebot.TeleBot(token)
 

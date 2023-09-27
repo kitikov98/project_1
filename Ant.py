@@ -8,8 +8,12 @@ from progekt_1_SQLLLL import Database
 
 db = Database('db.sqlite')
 
-GROUP_ID = ''
-GROUP_TOKEN = ''
+text = ''
+with open('data.json', 'r', encoding='utf-8') as f: #открыли файл с данными
+    text = json.load(f)
+
+GROUP_ID = text['vk_group']
+GROUP_TOKEN = text['vk_token']
 API_VERSION = '5.120'
 CALLBACK_TYPES = ('show_snackbar', 'open_link', 'open_app', 'text')
 menu_1 = db.get_category()
