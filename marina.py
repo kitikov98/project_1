@@ -364,7 +364,7 @@ def query_handler(call):
         print(f"average_rating {average_rating}")
         #ветвление где есть отзывы, где нет
         if  average_rating == "В":
-            bot.send_message(call.message.chat.id, db.get_product_rating(data))
+            bot.send_message(call.message.chat.id, db.get_product_rating(data), reply_markup=markupI_rating)
         else:
             bot.send_message(call.message.chat.id, f"Cредний рейтинг {average_rating}, \n Отзывы: {reviews}" ,
                          reply_markup=markupI_rating)
