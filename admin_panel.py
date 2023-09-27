@@ -9,7 +9,7 @@ with open('data.json', 'r', encoding='utf-8') as f: #открыли файл с 
 
 db = Database('db.sqlite')
 
-token = text['tg_token']
+token = text['tg_admin_panel']
 
 bot = telebot.TeleBot(token)
 
@@ -268,5 +268,8 @@ def query_handler(call):
                               call.message.message_id, reply_markup=adm_menu)
 
 
+def admin_panel_run():
+    bot.polling()
 
-bot.polling()
+if __name__ == '__main__':
+    admin_panel_run()
