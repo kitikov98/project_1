@@ -1,6 +1,6 @@
 import sqlite3 as sl
 from base64 import b64encode
-from progekt_1_SQLLLL import Database
+from progekt_1_SQL import Database
 
 
 db = Database('db.sqlite')

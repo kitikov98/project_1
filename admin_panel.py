@@ -1,7 +1,7 @@
 import telebot
 import json
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
-from progekt_1_SQLLLL import Database
+from progekt_1_SQL import Database
 
 text = ''
 with open('data.json', 'r', encoding='utf-8') as f: #открыли файл с данными
@@ -24,15 +24,12 @@ for x1 in menu_1:
     admin_markup.add(InlineKeyboardButton(x1, callback_data="A" + str(x1)))
 
 
-def check_admin_category(user_id):
-    cat = db.get_user_category(user_id)
-    return cat
 
 
 @bot.message_handler(commands=['start_admin_panel'])
 def start_admin_panel(message):
     # Проводим проверку является ли пользователь администратором
-    is_admin = check_admin_category(message.from_user.id)
+    is_admin = db.get_user_category(message.from_user.id)
 
     if is_admin == 'Данного пользователя не существует либо он пользуется vk-ботом':
         bot.reply_to(message, "У вас нет прав администратора")
@@ -112,7 +109,7 @@ def query_handler(call):
                                   call.message.message_id, reply_markup=prod_review_menu)
 
         elif data == "Удаление администратора":
-            is_admin = check_admin_category(call.message.chat.id)
+            is_admin = db.get_user_category(call.message.chat.id)
             if is_admin != 2:
                 bot.answer_callback_query(callback_query_id=call.id, text='Вы не обладаете такими правами')
             else:
@@ -127,7 +124,7 @@ def query_handler(call):
 
 
         elif data == "Изменение администраторов":
-            is_admin = check_admin_category(call.message.chat.id)
+            is_admin = db.get_user_category(call.message.chat.id)
             if is_admin != 2:
                 bot.answer_callback_query(callback_query_id=call.id, text='Вы не обладаете такими правами')
             else:
@@ -141,7 +138,7 @@ def query_handler(call):
                                       call.message.message_id, reply_markup=adm_menu)
 
         elif data == "Управление меню блюд":
-            is_admin = check_admin_category(call.message.chat.id)
+            is_admin = db.get_user_category(call.message.chat.id)
             if is_admin != 2:
                 bot.answer_callback_query(callback_query_id=call.id, text='Вы не обладаете такими правами')
             else:

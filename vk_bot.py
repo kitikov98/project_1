@@ -4,7 +4,7 @@ from vk_api.bot_longpoll import VkBotLongPoll, VkBotEventType
 from vk_api.keyboard import VkKeyboard, VkKeyboardColor
 import json
 import math
-from progekt_1_SQLLLL import Database
+from progekt_1_SQL import Database
 
 db = Database('db.sqlite')
 
