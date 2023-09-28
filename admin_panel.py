@@ -4,7 +4,7 @@ from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from progekt_1_SQL import Database
 
 text = ''
-with open('data.json', 'r', encoding='utf-8') as f: #открыли файл с данными
+with open('data.json', 'r', encoding='utf-8') as f:  # открыли файл с данными
     text = json.load(f)
 
 db = Database('db.sqlite')
@@ -22,6 +22,7 @@ admin_markup = InlineKeyboardMarkup()
 
 for x1 in menu_1:
     admin_markup.add(InlineKeyboardButton(x1, callback_data="A" + str(x1)))
+
 
 def slider():
     pass
@@ -64,7 +65,6 @@ def create_adm(message):
         bot.send_message(message.chat.id, 'Пользователь переведен в ряды администрации')
 
 
-
 @bot.callback_query_handler(func=lambda call: True)
 def query_handler(call):
     flag = call.data[0:1]
@@ -80,15 +80,16 @@ def query_handler(call):
             if stat_list != []:
                 if len(stat_list) == 1:
                     stat.add(InlineKeyboardButton('back', callback_data='Aback'))
-                    stat.add(InlineKeyboardButton('Принять', callback_data="D" +'a'+ str(stat_list[0][0])))
+                    stat.add(InlineKeyboardButton('Принять', callback_data="D" + 'a' + str(stat_list[0][0])))
                     bot.edit_message_text("Активный заказ " + str(stat_list[0][0]) + '. ' + str(stat_list[0][1]),
                                           call.message.chat.id,
                                           call.message.message_id, reply_markup=stat)
                 else:
                     stat.add(InlineKeyboardButton('back', callback_data='Aback'),
-                             InlineKeyboardButton('>', callback_data="D" +'>'+str(0)+'.'+str(stat_list[0][0])))
-                    stat.add(InlineKeyboardButton('Принять', callback_data="D" +'a'+ str(stat_list[0][0])))
-                    bot.edit_message_text("Активный заказ " + str(stat_list[0][0])+'. '+str(stat_list[0][1]), call.message.chat.id,
+                             InlineKeyboardButton('>', callback_data="D" + '>' + str(0) + '.' + str(stat_list[0][0])))
+                    stat.add(InlineKeyboardButton('Принять', callback_data="D" + 'a' + str(stat_list[0][0])))
+                    bot.edit_message_text("Активный заказ " + str(stat_list[0][0]) + '. ' + str(stat_list[0][1]),
+                                          call.message.chat.id,
                                           call.message.message_id, reply_markup=stat)
             else:
                 stat.add(InlineKeyboardButton('back', callback_data='Aback'))
@@ -104,15 +105,15 @@ def query_handler(call):
                     ord_review_menu.add(
                         InlineKeyboardButton('Просмотр', callback_data="E" + 'a' + str(ord_review_list[0][0])))
                     bot.edit_message_text("Отзыв на заказ № " + str(ord_review_list[0][0]),
-                        call.message.chat.id, call.message.message_id, reply_markup=ord_review_menu)
+                                          call.message.chat.id, call.message.message_id, reply_markup=ord_review_menu)
                 else:
                     ord_review_menu.add(InlineKeyboardButton('back', callback_data='Aback'),
-                                         InlineKeyboardButton('>', callback_data="E" + '>' + str(0) + '.' + str(
-                                             ord_review_list[0][0])))
+                                        InlineKeyboardButton('>', callback_data="E" + '>' + str(0) + '.' + str(
+                                            ord_review_list[0][0])))
                     ord_review_menu.add(
                         InlineKeyboardButton('Просмотр', callback_data="E" + 'a' + str(ord_review_list[0][0])))
                     bot.edit_message_text("Отзыв на заказ № " + str(ord_review_list[0][0]),
-                        call.message.chat.id, call.message.message_id, reply_markup=ord_review_menu)
+                                          call.message.chat.id, call.message.message_id, reply_markup=ord_review_menu)
             else:
                 ord_review_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
                 bot.edit_message_text("Активных отзывов нет", call.message.chat.id,
@@ -125,16 +126,21 @@ def query_handler(call):
             if prod_review_list != []:
                 if len(prod_review_list) == 1:
                     prod_review_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
-                    prod_review_menu.add(InlineKeyboardButton('Просмотр', callback_data="F" +'a'+ str(prod_review_list[0][0])))
-                    bot.edit_message_text("Отзыв на блюдо № " + str(prod_review_list[0][0]) + '. ' + str(prod_review_list[0][1]),
-                                          call.message.chat.id,
-                                          call.message.message_id, reply_markup=prod_review_menu)
+                    prod_review_menu.add(
+                        InlineKeyboardButton('Просмотр', callback_data="F" + 'a' + str(prod_review_list[0][0])))
+                    bot.edit_message_text(
+                        "Отзыв на блюдо № " + str(prod_review_list[0][0]) + '. ' + str(prod_review_list[0][1]),
+                        call.message.chat.id,
+                        call.message.message_id, reply_markup=prod_review_menu)
                 else:
                     prod_review_menu.add(InlineKeyboardButton('back', callback_data='Aback'),
-                             InlineKeyboardButton('>', callback_data="F" +'>'+str(0)+'.'+str(prod_review_list[0][0])))
-                    prod_review_menu.add(InlineKeyboardButton('Просмотр', callback_data="F" +'a'+ str(prod_review_list[0][0])))
-                    bot.edit_message_text("Отзыв на блюдо № " + str(prod_review_list[0][0]) + '. ' + str(prod_review_list[0][1]),
-                                          call.message.chat.id,call.message.message_id, reply_markup=prod_review_menu)
+                                         InlineKeyboardButton('>', callback_data="F" + '>' + str(0) + '.' + str(
+                                             prod_review_list[0][0])))
+                    prod_review_menu.add(
+                        InlineKeyboardButton('Просмотр', callback_data="F" + 'a' + str(prod_review_list[0][0])))
+                    bot.edit_message_text(
+                        "Отзыв на блюдо № " + str(prod_review_list[0][0]) + '. ' + str(prod_review_list[0][1]),
+                        call.message.chat.id, call.message.message_id, reply_markup=prod_review_menu)
             else:
                 prod_review_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
                 bot.edit_message_text("Активных отзывов нет", call.message.chat.id,
@@ -185,10 +191,11 @@ def query_handler(call):
     elif flag == 'D':
         stat_list = db.adm_get_ord()
         if data[0] == '>':
-            coord = int(data[1])+1
-            if coord == (len(stat_list)-1):
+            coord = int(data[1]) + 1
+            if coord == (len(stat_list) - 1):
                 d_menu = InlineKeyboardMarkup()
-                d_menu.add(InlineKeyboardButton('<', callback_data="D" + '<' + str(coord-1) + '.' + str(stat_list[coord][0])),
+                d_menu.add(InlineKeyboardButton('<', callback_data="D" + '<' + str(coord - 1) + '.' + str(
+                    stat_list[coord][0])),
                            InlineKeyboardButton('back', callback_data='Aback'))
                 d_menu.add(InlineKeyboardButton('Принять', callback_data="D" + 'a' + str(stat_list[coord][0])))
                 bot.edit_message_text("Активный заказ " + str(stat_list[coord][0]) + '. ' + str(stat_list[coord][1]),
@@ -196,27 +203,32 @@ def query_handler(call):
 
             elif coord < len(stat_list):
                 d_menu = InlineKeyboardMarkup()
-                d_menu.add(InlineKeyboardButton('<', callback_data="D" + '<' + str(coord-1) + '.' + str(stat_list[coord-1][0])),
+                d_menu.add(InlineKeyboardButton('<', callback_data="D" + '<' + str(coord - 1) + '.' + str(
+                    stat_list[coord - 1][0])),
                            InlineKeyboardButton('back', callback_data='Aback'),
-                           InlineKeyboardButton('>',callback_data="D" +'>'+str(coord)+'.'+str(stat_list[coord][0])))
-                d_menu.add(InlineKeyboardButton('Принять', callback_data="D" +'a'+str(stat_list[coord][0])))
-                bot.edit_message_text("Активный заказ " + str(stat_list[coord][0])+'. '+str(stat_list[coord][1]),
+                           InlineKeyboardButton('>',
+                                                callback_data="D" + '>' + str(coord) + '.' + str(stat_list[coord][0])))
+                d_menu.add(InlineKeyboardButton('Принять', callback_data="D" + 'a' + str(stat_list[coord][0])))
+                bot.edit_message_text("Активный заказ " + str(stat_list[coord][0]) + '. ' + str(stat_list[coord][1]),
                                       call.message.chat.id, call.message.message_id, reply_markup=d_menu)
         elif data[0] == '<':
             coord = int(data[1])
             if coord == 0:
                 d_menu = InlineKeyboardMarkup()
                 d_menu.add(InlineKeyboardButton('back', callback_data='Aback'),
-                           InlineKeyboardButton('>',callback_data="D" +'>'+str(coord)+'.'+str(stat_list[coord][0])))
+                           InlineKeyboardButton('>',
+                                                callback_data="D" + '>' + str(coord) + '.' + str(stat_list[coord][0])))
                 d_menu.add(InlineKeyboardButton('Принять', callback_data="D" + 'a' + str(stat_list[1][0])))
                 bot.edit_message_text("Активный заказ " + str(stat_list[coord][0]) + '. ' + str(stat_list[coord][1]),
                                       call.message.chat.id, call.message.message_id, reply_markup=d_menu)
 
             elif coord < len(stat_list):
                 d_menu = InlineKeyboardMarkup()
-                d_menu.add(InlineKeyboardButton('<', callback_data="D" + '<' + str(coord-1) + '.' + str(stat_list[coord][0])),
+                d_menu.add(InlineKeyboardButton('<', callback_data="D" + '<' + str(coord - 1) + '.' + str(
+                    stat_list[coord][0])),
                            InlineKeyboardButton('back', callback_data='Aback'),
-                           InlineKeyboardButton('>',callback_data="D" + '>' + str(coord) + '.' + str(stat_list[coord][0])))
+                           InlineKeyboardButton('>',
+                                                callback_data="D" + '>' + str(coord) + '.' + str(stat_list[coord][0])))
                 d_menu.add(InlineKeyboardButton('Принять', callback_data="D" + 'a' + str(stat_list[coord][0])))
                 bot.edit_message_text("Активный заказ " + str(stat_list[coord][0]) + '. ' + str(stat_list[coord][1]),
                                       call.message.chat.id, call.message.message_id, reply_markup=d_menu)
@@ -299,8 +311,9 @@ def query_handler(call):
                     prod_review_list[coord][0])),
                            InlineKeyboardButton('back', callback_data='Aback'))
                 d_menu.add(InlineKeyboardButton('Прсмотр', callback_data="F" + 'a' + str(prod_review_list[coord][0])))
-                bot.edit_message_text("Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
-                                      call.message.chat.id, call.message.message_id, reply_markup=d_menu)
+                bot.edit_message_text(
+                    "Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
+                    call.message.chat.id, call.message.message_id, reply_markup=d_menu)
 
             elif coord < len(prod_review_list):
                 d_menu = InlineKeyboardMarkup()
@@ -308,20 +321,24 @@ def query_handler(call):
                     prod_review_list[coord - 1][0])),
                            InlineKeyboardButton('back', callback_data='Aback'),
                            InlineKeyboardButton('>',
-                                                callback_data="F" + '>' + str(coord) + '.' + str(prod_review_list[coord][0])))
+                                                callback_data="F" + '>' + str(coord) + '.' + str(
+                                                    prod_review_list[coord][0])))
                 d_menu.add(InlineKeyboardButton('Прсмотр', callback_data="F" + 'a' + str(prod_review_list[coord][0])))
-                bot.edit_message_text("Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
-                                      call.message.chat.id, call.message.message_id, reply_markup=d_menu)
+                bot.edit_message_text(
+                    "Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
+                    call.message.chat.id, call.message.message_id, reply_markup=d_menu)
         elif data[0] == '<':
             coord = int(data[1])
             if coord == 0:
                 d_menu = InlineKeyboardMarkup()
                 d_menu.add(InlineKeyboardButton('back', callback_data='Aback'),
                            InlineKeyboardButton('>',
-                                                callback_data="F" + '>' + str(coord) + '.' + str(prod_review_list[coord][0])))
+                                                callback_data="F" + '>' + str(coord) + '.' + str(
+                                                    prod_review_list[coord][0])))
                 d_menu.add(InlineKeyboardButton('Прсмотр', callback_data="F" + 'a' + str(prod_review_list[1][0])))
-                bot.edit_message_text("Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
-                                      call.message.chat.id, call.message.message_id, reply_markup=d_menu)
+                bot.edit_message_text(
+                    "Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
+                    call.message.chat.id, call.message.message_id, reply_markup=d_menu)
 
             elif coord < len(prod_review_list):
                 d_menu = InlineKeyboardMarkup()
@@ -329,10 +346,12 @@ def query_handler(call):
                     prod_review_list[coord][0])),
                            InlineKeyboardButton('back', callback_data='Aback'),
                            InlineKeyboardButton('>',
-                                                callback_data="F" + '>' + str(coord) + '.' + str(prod_review_list[coord][0])))
+                                                callback_data="F" + '>' + str(coord) + '.' + str(
+                                                    prod_review_list[coord][0])))
                 d_menu.add(InlineKeyboardButton('Прсмотр', callback_data="F" + 'a' + str(prod_review_list[coord][0])))
-                bot.edit_message_text("Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
-                                      call.message.chat.id, call.message.message_id, reply_markup=d_menu)
+                bot.edit_message_text(
+                    "Отзыв на блюдо № " + str(prod_review_list[coord][0]) + '. ' + str(prod_review_list[coord][1]),
+                    call.message.chat.id, call.message.message_id, reply_markup=d_menu)
         elif data[0] == 'a':
             data = data.split('a')[1]
             list1 = db.adm_get_prod_rewiew(data)
@@ -422,7 +441,7 @@ def query_handler(call):
                                   call.message.message_id, reply_markup=adm_menu)
     elif flag == 'K':
         adm_menu = InlineKeyboardMarkup()
-        adm_menu.add(InlineKeyboardButton('принять', callback_data='L'+str(data)),
+        adm_menu.add(InlineKeyboardButton('принять', callback_data='L' + str(data)),
                      InlineKeyboardButton('отказаться', callback_data='Aback'))
         adm_menu.add(InlineKeyboardButton('back', callback_data='Aback'))
         bot.edit_message_text(f'id администратора: {data}\n Действительно удалить?', call.message.chat.id,
@@ -435,9 +454,9 @@ def query_handler(call):
                               call.message.message_id, reply_markup=adm_menu)
 
 
-
 def admin_panel_run():
     bot.polling()
+
 
 if __name__ == '__main__':
     admin_panel_run()
