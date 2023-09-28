@@ -233,6 +233,7 @@ def vk_bot():
                         ord_rating['review'] = event.obj.message['text']
                         db.add_order_rating(event.obj.message['from_id'], ord_rating['order_id'], ord_rating['review'], ord_rating['mark'])
                         vk_send_text(event.obj.message['from_id'], f"Спасибо за ваш отзыв")
+                        ord_rating = {'order_id': None, 'review': None, 'mark': None}
 
                 elif user_stat_ind == 3:
                     if event.obj.message['text'] == 'Статистика блюд':
@@ -253,7 +254,8 @@ def vk_bot():
                     elif event.obj.message['text'] != '' and product_rat['product'] is not None:
                         product_rat['review'] = event.obj.message['text']
                         db.add_product_rating(event.obj.message['from_id'], product_rat['product'],
-                                              product_rat['rewiev'], product_rat['mark'])
+                                              product_rat['review'], product_rat['mark'])
+                        product_rat = {'product': None, 'review': None, 'mark': None}
                         vk_send_text(event.obj.message['from_id'], f"Спасибо за ваш отзыв")
 
                 elif user_stat_ind == 4:
