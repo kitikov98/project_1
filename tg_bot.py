@@ -331,9 +331,9 @@ def query_handler(call):
         bot.send_message(call.message.chat.id, f"Выберите рейтинг по заказу {data}\n и для написания отзыва выбирайте кнопку 'Отзыв'!", reply_markup=markupI_mark_order)
     elif flag == "17":
         print(f"Летит рейтинг заказа или кнока отзыв= {data}")
-        if dict_users.get(call.message.chat.id).get('mark_order') == '' or 'mark_order' not in dict_users[call.message.chat.id]:
+        if data != "Отзыв":
             dict_users[call.message.chat.id]['mark_order'] = data
-        if data == "Отзыв":
+        elif data == "Отзыв":
             dict_users[call.message.chat.id]['flag_review_order'] = True
             bot.send_message(call.message.chat.id, "Напишите отзыв в чате и введите Enter!", reply_markup=markupI_review_order)
     elif flag == "18":
@@ -355,8 +355,8 @@ print("Ready")
 def func_run_teleg():
     bot.infinity_polling()
 
-func_run_teleg()
+#func_run_teleg()
 
 if __name__ == '__main__':
     print()
-    tg_bot()
+    func_run_teleg()
