@@ -446,5 +446,10 @@ class Database:
             else:
                 return id_tg[0]
 
+    def adm_chec_orders(self, time_now):
+        with self.connection:
+            time = self.connection.execute(f'SELECT date_delivery FROM orders WHERE date_delivery<"{time_now}"').fetchone()
+            return time
+
 
 db = Database('db.sqlite')

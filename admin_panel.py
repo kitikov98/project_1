@@ -2,13 +2,14 @@ import telebot
 import json
 from telebot.types import InlineKeyboardMarkup, InlineKeyboardButton
 from progekt_1_SQL import Database
+from datetime import datetime, timedelta
 
 text = ''
 with open('data.json', 'r', encoding='utf-8') as f:  # открыли файл с данными
     text = json.load(f)
 
 db = Database('db.sqlite')
-
+tg_group_admins_id = -4054648163
 token = text['tg_admin_panel']
 
 bot = telebot.TeleBot(token)
@@ -24,8 +25,17 @@ for x1 in menu_1:
     admin_markup.add(InlineKeyboardButton(x1, callback_data="A" + str(x1)))
 
 
-def slider():
-    pass
+def sender():
+    time_now = datetime.now()
+    a = db.adm_chec_orders(time_now)
+    if a is not None:
+        bot.send_message(tg_group_admins_id, 'Проверьте статусы заказов')
+    b = db.adm_get_rating_prod()
+    if b is not None:
+        bot.send_message(tg_group_admins_id, 'Проверьте отзывы на блюда')
+    c = db.adm_get_rating_ord()
+    if c is not None:
+        bot.send_message(tg_group_admins_id, 'Проверьте отзывы на доставки')
 
 
 @bot.message_handler(commands=['start_admin_panel'])
@@ -43,6 +53,8 @@ def start_admin_panel(message):
 
 @bot.message_handler(commands=['Это_Казахстан?'])
 def secret_panel(message):
+    print(message.from_user.id)
+    print(message.chat.id)
     try:
         db.add_user(None, int(message.from_user.id), None)
     except:
