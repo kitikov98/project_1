@@ -391,8 +391,10 @@ class Database:
     def adm_get_rating_prod(self):
         """ выдача списка отзывов, которые на рассмотрении"""
         with self.connection:
-            orders = self.connection.execute(f'SELECT * FROM products_rating WHERE status ="на рассмотрении"').fetchall()
-            return orders
+            products = self.connection.execute(f"""SELECT products_rating.id, products.name, products_rating.comment
+            FROM products_rating INNER JOIN products
+            ON products_rating.product_id = products.id WHERE products_rating.status ='на рассмотрении'""").fetchall()
+            return products
 
     def adm_get_prod_rewiew(self, order_id):
         """ выдача информации по отзыву"""
@@ -436,6 +438,13 @@ class Database:
             self.connection.execute(f'UPDATE users SET category = 0 WHERE tg_id = {tg_id}')
             self.connection.commit()
 
+    def check_tg_id(self, tg_id):
+        with self.connection:
+            id_tg = self.connection.execute(f'SELECT tg_id FROM users WHERE tg_id={tg_id}').fetchone()
+            if id_tg is None:
+                return None
+            else:
+                return id_tg[0]
+
 
 db = Database('db.sqlite')
-
