@@ -326,14 +326,13 @@ def query_handler(call):
                 InlineKeyboardButton("Назад в главное меню", callback_data='1' + "Назад в главное меню"))
             bot.send_message(call.message.chat.id, "Выберите заказ для рейтинга!", reply_markup=markupI_stat_order)
     elif flag == "16":
-        #flag_id_order_stat = True
         dict_users[call.message.chat.id]['id_order_stat'] = data
         print(f"Летит номер заказа для peйтинга = {dict_users[call.message.chat.id]['id_order_stat']}")
         bot.send_message(call.message.chat.id, f"Выберите рейтинг по заказу {data}\n и для написания отзыва выбирайте кнопку 'Отзыв'!", reply_markup=markupI_mark_order)
     elif flag == "17":
-        print(f"Летит рейтинг заказа = {data}")
-        dict_users[call.message.chat.id]['mark_order'] = data
-        print(f"data in 17 {data}")
+        print(f"Летит рейтинг заказа или кнока отзыв= {data}")
+        if dict_users.get(call.message.chat.id).get('mark_order') == '' or 'mark_order' not in dict_users[call.message.chat.id]:
+            dict_users[call.message.chat.id]['mark_order'] = data
         if data == "Отзыв":
             dict_users[call.message.chat.id]['flag_review_order'] = True
             bot.send_message(call.message.chat.id, "Напишите отзыв в чате и введите Enter!", reply_markup=markupI_review_order)
@@ -343,6 +342,10 @@ def query_handler(call):
                 bot.send_message(call.message.chat.id, "Вам необходимо заполнить отзыв и выставить рейтинг!")
             else:
                 print(f"Отправляется отзыв по заказу data = {data}")
+                print(f"call.message.chat.id {call.message.chat.id}")
+                print(f"dict_users[call.message.chat.id]['id_order_stat'] {dict_users[call.message.chat.id]['id_order_stat']}")
+                print(f"dict_users.get(call.message.chat.id).get('review_order') {dict_users.get(call.message.chat.id).get('review_order')}")
+                print(f"dict_users.get(call.message.chat.id).get('mark_order') {dict_users.get(call.message.chat.id).get('review_order')}")
                 db.add_order_rating(call.message.chat.id, dict_users[call.message.chat.id]['id_order_stat'], dict_users.get(call.message.chat.id).get('review_order'), dict_users.get(call.message.chat.id).get('mark_order'))
                 bot.send_message(call.message.chat.id, "Отзыв по заказу отправлен!")
 
